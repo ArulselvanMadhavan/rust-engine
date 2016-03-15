@@ -2,3 +2,4 @@ We can track the software and hardware versions and other links to useful tutori
 
 
 1. Rust Book - https://doc.rust-lang.org/nightly/book/
+2. Awesome Rust - https://github.com/kud1ing/awesome-rust#ides
