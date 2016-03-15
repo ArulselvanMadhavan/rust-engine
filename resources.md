@@ -18,3 +18,5 @@ Test Environment - Mac
 Getting Started:https://doc.rust-lang.org/nightly/book/getting-started.html
 
 Rust IRC: https://client02.chat.mibbit.com/?server=irc.mozilla.org&channel=%23rust
+
+IDE - https://github.com/oakes/SolidOak
