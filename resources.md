@@ -17,6 +17,8 @@ Test Environment - Mac
 
 Getting Started:https://doc.rust-lang.org/nightly/book/getting-started.html
 
+Version: Rust v1.7.0 - I cloned the source repo and built the binaries following the instructions in here->https://github.com/rust-lang/rust
+
 Rust IRC: https://client02.chat.mibbit.com/?server=irc.mozilla.org&channel=%23rust
 
-IDE - https://github.com/oakes/SolidOak
+IDE - Sublime + Plugins(Racer(via Cargo),RustAutoComplete,Rust)
