@@ -18,6 +18,8 @@ Test Environment - Mac
 Getting Started:https://doc.rust-lang.org/nightly/book/getting-started.html
 
 Version: Rust v1.7.0 - I cloned the source repo and built the binaries following the instructions in here->https://github.com/rust-lang/rust
+Note: I tried to build v1.7. Build ran for 1.5 hours and then failed.
+Not able to build the source. So installed the binaries. Will retry building the source
 
 Rust IRC: https://client02.chat.mibbit.com/?server=irc.mozilla.org&channel=%23rust
 
