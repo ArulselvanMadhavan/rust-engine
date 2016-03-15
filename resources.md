@@ -14,3 +14,6 @@ Test Environment - Mac
 
 1. Rust Book - https://doc.rust-lang.org/nightly/book/
 2. Awesome Rust - https://github.com/kud1ing/awesome-rust#ides
+
+
+Getting Started:https://doc.rust-lang.org/nightly/book/getting-started.html
