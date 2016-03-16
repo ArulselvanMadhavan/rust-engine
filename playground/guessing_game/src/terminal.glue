@@ -1,0 +1,10 @@
+█ [ /home/arulselvanmadhavan/rust-engine/playground/guessing_game/src ] cargo build
+   Compiling guessing_game v0.1.0 (file:///home/arulselvanmadhavan/rust-engine/playground/guessing_game)
+
+█ [ /home/arulselvanmadhavan/rust-engine/playground/guessing_game/src ] cargo run
+     Running `/home/arulselvanmadhavan/rust-engine/playground/guessing_game/target/debug/guessing_game`
+Guess Game
+Input a number
+You guessed 
+
+ 
