@@ -1,0 +1,23 @@
+use std::os;
+
+
+fn main() {
+    if os::args.len() < 2{
+    	println!("Program requires an argument");
+    	return;
+    }
+    let i = from_str::<int>(os::args()[1]).unwrap();
+	println!("{:d} has {:d} Collatz steps", i, collatz(i));
+}
+
+fn collatz(i:int){
+	while(i != 1){
+	if(i%2 == 1){
+		//i is odd
+		i = 3*i+1;
+	}
+	else{
+		i = i/2;
+	}
+}
+}
