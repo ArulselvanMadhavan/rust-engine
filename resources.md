@@ -26,3 +26,5 @@ Rust IRC: https://client02.chat.mibbit.com/?server=irc.mozilla.org&channel=%23ru
 IDE - Sublime + Plugins(Racer(via Cargo),RustAutoComplete,Rust)
 
 HTTP2 - FAQs - https://http2.github.io/faq/
+
+Good Resource for ownership and borrowing: https://www.youtube.com/watch?v=A7pH0PxxBAM
