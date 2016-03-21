@@ -24,3 +24,5 @@ Not able to build the source. So installed the binaries. Will retry building the
 Rust IRC: https://client02.chat.mibbit.com/?server=irc.mozilla.org&channel=%23rust
 
 IDE - Sublime + Plugins(Racer(via Cargo),RustAutoComplete,Rust)
+
+HTTP2 - FAQs - https://http2.github.io/faq/
