@@ -27,4 +27,7 @@ IDE - Sublime + Plugins(Racer(via Cargo),RustAutoComplete,Rust)
 
 HTTP2 - FAQs - https://http2.github.io/faq/
 
-Good Resource for ownership and borrowing: https://www.youtube.com/watch?v=A7pH0PxxBAM
+Good Resources for ownership and borrowing: 
+
+1. https://www.youtube.com/watch?v=A7pH0PxxBAM
+2. 3 Part Tutorial(2 available) - https://mobiarch.wordpress.com/2015/06/29/understanding-lifetime-in-rust-part-i/
