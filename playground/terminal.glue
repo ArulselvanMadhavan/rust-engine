@@ -1,0 +1,21 @@
+█ [ /home/arulselvanmadhavan/rust-engine/playground ] pwd
+/home/arulselvanmadhavan/rust-engine/playground
+
+█ [ /home/arulselvanmadhavan/rust-engine/playground ] cargo new guessing_game --bin
+
+█ [ /home/arulselvanmadhavan/rust-engine/playground/guessing_game ] cargo build
+   Compiling guessing_game v0.1.0 (file:///home/arulselvanmadhavan/rust-engine/playground/guessing_game)
+cargo run
+█ [ /home/arulselvanmadhavan/rust-engine/playground ] cargo run
+could not find `Cargo.toml` in `/home/arulselvanmadhavan/rust-engine/playground` or any parent directory
+
+█ [ /home/arulselvanmadhavan/rust-engine/playground ] cd guesssing_game
+Directory path 'guesssing_game' does not exist
+
+█ [ /home/arulselvanmadhavan/rust-engine/playground/guessing_game ] cd guessing_game
+/home/arulselvanmadhavan/rust-engine/playground/guessing_game
+
+█ [ /home/arulselvanmadhavan/rust-engine/playground ] pwd
+/home/arulselvanmadhavan/rust-engine/playground
+
+ 
