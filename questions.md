@@ -1,4 +1,5 @@
-We can track our open questions here.
+TODO Items:
 
-1. How to perform modulo operation on float?
-2. Can match work on expressions?
+1. Figure out how to send different response codes in HTTPv1.1 version.
+2. Figure out how to log each http request and response.
+3. 
