@@ -40,3 +40,6 @@ https://doc.rust-lang.org/std/fs/index.html
 
 List of Web Server Benchmarking Tools
 https://en.wikipedia.org/wiki/Web_server_benchmarking
+
+Good article on Stack vs Heap allocation
+https://doc.rust-lang.org/book/the-stack-and-the-heap.html
