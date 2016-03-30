@@ -43,3 +43,6 @@ https://en.wikipedia.org/wiki/Web_server_benchmarking
 
 Good article on Stack vs Heap allocation
 https://doc.rust-lang.org/book/the-stack-and-the-heap.html
+
+Good article on how to pass closures as arguments to traits
+https://camjackson.net/post/rust-lang-how-to-pass-a-closure-into-a-trait-object
