@@ -4,3 +4,8 @@ version = "0.1.0"
 authors = ["jlyneu <jly@ccs.neu.edu>"]
 
 [dependencies]
+num_cpus = "0.2"
+
+[lib]
+name = "threadpool"
+path = "lib/rust-threadpool/src/lib.rs"
