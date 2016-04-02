@@ -46,3 +46,8 @@ https://doc.rust-lang.org/book/the-stack-and-the-heap.html
 
 Good article on how to pass closures as arguments to traits
 https://camjackson.net/post/rust-lang-how-to-pass-a-closure-into-a-trait-object
+
+Closures - FnOnce,FnMut,Fn
+http://stackoverflow.com/questions/30177395/when-does-a-closure-implement-fn-fnmut-and-fnonce
+http://huonw.github.io/blog/2015/05/finding-closure-in-rust/
+http://rustbyexample.com/fn/closures/input_parameters.html
