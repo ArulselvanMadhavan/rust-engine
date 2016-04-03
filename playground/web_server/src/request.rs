@@ -1,3 +1,33 @@
+use std::str;
+
+pub struct Request {
+    method: String,
+    filename: String,
+    host: String
+}
+
+impl Request {
+    pub fn new(method: String, filename: String, host: String) -> Request {
+        Request {
+            method: method,
+            filename: filename,
+            host: host
+        }
+    }
+
+    pub fn get_method(&self) -> &String {
+        &self.method
+    }
+
+    pub fn get_filename(&self) -> &String {
+        &self.filename
+    }
+
+    pub fn get_host(&self) -> &String {
+        &self.host
+    }
+}
+
 /*use std::net::{TcpStream};
 use std::io::prelude::*;
 use std::str;

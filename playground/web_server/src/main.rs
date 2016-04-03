@@ -11,6 +11,7 @@ use std::str;
 use std::env;
 use std::path::PathBuf;
 use threadpool::ThreadPool;
+use request::Request;
 
 const BUFFER_SIZE: usize = 20;
 
@@ -84,6 +85,11 @@ fn handle_client(mut stream: TcpStream) {
     println!("request: {}", request);
 
     let pathname = get_path_from_request(&request[..]);
+
+    let request_obj = Request::new("GET".to_string(), pathname.to_string(), "localhost:8080".to_string());
+
+    println!("pathname: {}", *request_obj.get_filename());
+
     let f = match File::open(pathname) {
         Ok(mut f) => {
             let mut s = String::new();
