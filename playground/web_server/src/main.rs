@@ -1,6 +1,8 @@
 extern crate threadpool;
 extern crate num_cpus;
 
+mod request;
+
 use std::net::{TcpListener, TcpStream};
 use std::thread;
 use std::io::prelude::*;
@@ -40,18 +42,32 @@ fn get_path_from_request(request: &str) -> &str {
 }
 
 fn handle_client(mut stream: TcpStream) {
+
+    /*
+    let request = Request::new(stream);
+    let filename = request.filename;
+    try to open the file
+    if success
+       let response = Response::new(wofjaoij);
+    else
+       let response = Response::new(aoweifo);
+    "send"
+
+
+       */
     // string to hold request body
     let mut request = String::new();
     println!("Ready to read");
    
     // TODO: Content length should be inferred from the request, not hardcoded
-    let mut contents = [0; 16];
+    let mut contents = [0; 1000];
 
     // read request into string
     let result = stream.read(&mut contents);
     match result {
         Ok(result) => {
             let string_result = str::from_utf8(&contents).unwrap();
+            println!("{}", string_result);
             let pathname = get_path_from_request(string_result);
             println!("{:?}", pathname);
             let f = match File::open(pathname) {
