@@ -59,7 +59,7 @@ fn handle_client(mut stream: TcpStream) {
 
        */
     // string to hold request body
-    
+    /*
     let mut request = String::new();
     println!("Ready to read");
 
@@ -80,12 +80,11 @@ fn handle_client(mut stream: TcpStream) {
                 break;
             }
         };
-    }
+    }*/
 
-    println!("request: {}", request);
 
     //let pathname = get_path_from_request(&request[..]);
-    let request_obj = Request::new(request);
+    let request_obj = Request::new(&mut stream);
     //let request_obj = Request::new("GET".to_string(), pathname.to_string(), "localhost:8080".to_string());
 
 

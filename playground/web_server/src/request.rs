@@ -1,7 +1,10 @@
+use std::net::TcpStream;
 use std::io::prelude::*;
 use std::str;
 use std::path::PathBuf;
 use std::env;
+
+const BUFFER_SIZE: usize = 20;
 
 pub struct Request {
     method: String,
@@ -11,8 +14,29 @@ pub struct Request {
 
 impl Request {
 
-    pub fn new(request_str: String) -> Request {
-        Request::create_obj("GET".to_string(), Request::get_path_from_request(&request_str[..]).to_string(),
+    pub fn new(stream: &mut TcpStream) -> Request {
+        let mut request = String::new();
+
+        let mut read_buf = [0; BUFFER_SIZE];
+
+        loop {
+            let bytes_read = stream.read(&mut read_buf);
+            match bytes_read {
+                Ok(bytes_read) => {
+                    let string_result = str::from_utf8(&read_buf).unwrap();
+                    request.push_str(string_result);
+                    if bytes_read < BUFFER_SIZE {
+                        break;
+                    }
+                }
+                Err(e) => {
+                    println!("Error reading stream");
+                    break;
+                }
+            };
+        }
+
+        Request::create_obj("GET".to_string(), Request::get_path_from_request(&request[..]).to_string(),
         "localhost:8080".to_string())
     }
 
