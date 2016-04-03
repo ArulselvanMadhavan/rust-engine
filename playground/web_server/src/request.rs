@@ -1,4 +1,7 @@
+use std::io::prelude::*;
 use std::str;
+use std::path::PathBuf;
+use std::env;
 
 pub struct Request {
     method: String,
@@ -7,7 +10,13 @@ pub struct Request {
 }
 
 impl Request {
-    pub fn new(method: String, filename: String, host: String) -> Request {
+
+    pub fn new(request_str: String) -> Request {
+        Request::create_obj("GET".to_string(), Request::get_path_from_request(&request_str[..]).to_string(),
+        "localhost:8080".to_string())
+    }
+
+    fn create_obj(method: String, filename: String, host: String) -> Request {
         Request {
             method: method,
             filename: filename,
@@ -26,6 +35,24 @@ impl Request {
     pub fn get_host(&self) -> &String {
         &self.host
     }
+
+    fn get_path_from_request(request: &str) -> &str {
+        let mut abs_path = PathBuf::new();
+        let curr_dir = env::current_dir().unwrap();
+        abs_path.push(curr_dir);
+        println!("{}", abs_path.display());
+        let mut iter = request.split_whitespace();
+        iter.next();
+        let requested_path = iter.next().unwrap();
+        abs_path.push(requested_path);
+        println!("{}", abs_path.display());
+        abs_path;
+        // TODO: Rewrite to avoid creating new string
+        &requested_path[1..]
+    }
+
+
+
 }
 
 /*use std::net::{TcpStream};
