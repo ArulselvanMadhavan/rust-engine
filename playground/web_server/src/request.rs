@@ -1,4 +1,4 @@
-use std::net::{TcpStream};
+/*use std::net::{TcpStream};
 use std::io::prelude::*;
 use std::str;
 use std::path::PathBuf;
@@ -75,4 +75,4 @@ fn get_path_from_request(request: &str) -> &str {
     &requested_path[1..]
 }
 
-
+*/

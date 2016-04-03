@@ -12,6 +12,8 @@ use std::env;
 use std::path::PathBuf;
 use threadpool::ThreadPool;
 
+const BUFFER_SIZE: usize = 20;
+
 fn init_server() -> ThreadPool {
     println!("{}", num_cpus::get());
     let cpu_count = num_cpus::get();
@@ -56,9 +58,48 @@ fn handle_client(mut stream: TcpStream) {
 
        */
     // string to hold request body
+    
     let mut request = String::new();
     println!("Ready to read");
-   
+
+    let mut read_buf = [0; BUFFER_SIZE];
+
+    loop {
+        let bytes_read = stream.read(&mut read_buf);
+        match bytes_read {
+            Ok(bytes_read) => {
+                let string_result = str::from_utf8(&read_buf).unwrap();
+                request.push_str(string_result);
+                if bytes_read < BUFFER_SIZE {
+                    break;
+                }
+            }
+            Err(e) => {
+                println!("Error reading stream");
+                break;
+            }
+        };
+    }
+
+    println!("request: {}", request);
+
+    let pathname = get_path_from_request(&request[..]);
+    let f = match File::open(pathname) {
+        Ok(mut f) => {
+            let mut s = String::new();
+            f.read_to_string(&mut s);
+            stream.write(s.as_bytes());
+        }
+        Err(e) => {
+            let mut error_file = File::open("error.html").unwrap();
+            let mut error_vec = Vec::new();
+            error_file.read_to_end(&mut error_vec);
+            let error_byte_array = error_vec.as_slice();
+            stream.write(error_byte_array);
+        }
+    };
+
+   /*
     // TODO: Content length should be inferred from the request, not hardcoded
     let mut contents = [0; 1000];
 
@@ -92,7 +133,7 @@ fn handle_client(mut stream: TcpStream) {
             println!("Error when reading request");
         }
     }
-    
+    */
 }
 
 
