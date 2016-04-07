@@ -3,13 +3,15 @@ use std::io::prelude::*;
 use std::str;
 use std::path::PathBuf;
 use std::env;
+use std::collections::HashMap;
 
 const BUFFER_SIZE: usize = 20;
 
 pub struct Request {
     method: String,
     filename: String,
-    host: String
+    protocol: String,
+    headers: HashMap<String, String>
 }
 
 impl Request {
@@ -36,16 +38,7 @@ impl Request {
             };
         }
 
-        Request::create_obj("GET".to_string(), Request::get_path_from_request(&request[..]).to_string(),
-        "localhost:8080".to_string())
-    }
-
-    fn create_obj(method: String, filename: String, host: String) -> Request {
-        Request {
-            method: method,
-            filename: filename,
-            host: host
-        }
+        Request::parse_request(&request[..])
     }
 
     pub fn get_method(&self) -> &String {
@@ -56,104 +49,61 @@ impl Request {
         &self.filename
     }
 
-    pub fn get_host(&self) -> &String {
-        &self.host
+    pub fn get_protocol(&self) -> &String {
+        &self.protocol
     }
 
-    fn get_path_from_request(request: &str) -> &str {
-        let mut abs_path = PathBuf::new();
+    pub fn get_headers(&self) -> &HashMap<String, String> {
+        &self.headers
+    }
+
+    fn parse_request(request: &str) -> Request {
+        // hashmap to store header values
+        let mut header_map: HashMap<String, String> = HashMap::new();
+        // get current directory path
         let curr_dir = env::current_dir().unwrap();
-        abs_path.push(curr_dir);
-        println!("{}", abs_path.display());
-        let mut iter = request.split_whitespace();
-        iter.next();
-        let requested_path = iter.next().unwrap();
-        abs_path.push(requested_path);
-        println!("{}", abs_path.display());
-        abs_path;
-        // TODO: Rewrite to avoid creating new string
-        &requested_path[1..]
-    }
+        // split request by line
+        let mut line_split = request.split("\n");
+        
+        // parse the method, path, and protocol from the first line of the request
+        // TODO: error handling, what if there is a space in file path?
+        let mut first_line = line_split.next().unwrap().split_whitespace();
 
+        let method = first_line.next().unwrap().to_string();
 
+        let rel_path = first_line.next().unwrap();
+        let filename = curr_dir.display().to_string() + &rel_path.to_string();
 
-}
+        let protocol = first_line.next().unwrap().to_string();
 
-/*use std::net::{TcpStream};
-use std::io::prelude::*;
-use std::str;
-use std::path::PathBuf;
-use std::env;
-
-struct Request {
-    method: String,
-    filename: String,
-    host: String
-}
-
-impl Request {
-    fn new(&self, stream: TcpStream) -> Result<Request, &str> {
-
-        let request_str: &str;
-        match read_from_stream(stream) {
-            Ok(output_str) => {
-                request_str = output_str;
-
-                let method_val = "GET".to_string();
-                let filename_val = get_path_from_request(request_str).to_string();
-                let host_val = "localhost:8080".to_string();
-
-                Ok(Request {
-                    method: method_val,
-                    filename: filename_val,
-                    host: host_val
-                })
+        // split each line by ":" to find the header name and header values.
+        // if there are colons in header value, then we need to concatenate
+        // the pieces again
+        for line in line_split {
+            let mut colon_split = line.split(":");
+            let key = colon_split.next().unwrap().to_string();
+            // don't insert into the hashmap if this is a blank line
+            if key.trim().len() == 0 {
+                continue;
             }
-            Err(e) => {
-                // TODO: Actually send response back with 400 Bad Request status
-                println!("400 Bad Request");
-                Err("400 Bad Request")   
+            let mut value = String::new();
+            for s in colon_split {
+                value = value + &s.trim().to_string();
+                value = value + ":";
             }
+            // remove last ":"
+            value.pop();
+            header_map.insert(key, value);
+        }
+        Request {
+            method: method,
+            filename: filename,
+            protocol: protocol,
+            headers: header_map
         }
     }
+
+
+
 }
 
-
-fn read_from_stream(mut stream: TcpStream) -> Result<&str, & str> {
-    // TODO: Content length should be inferred from the request, not hardcoded
-    let mut contents = [0; 1024];
-    // read request into buffer
-    let result = stream.read(&mut contents);
-    //let string_result = str::from_utf8(&contents).unwrap();
-
-    match result {
-        Ok(result) => {
-            let string_result = str::from_utf8(&contents).unwrap();
-            Ok(string_result)
-        }
-        Err(e) => {
-            // TODO: Better error handling
-            println!("Error when reading request");
-            println!("{:?}", e);
-            Err("Error")
-        }
-    }
-}
-
-fn get_path_from_request(request: &str) -> &str {
-
-    let mut abs_path = PathBuf::new();
-    let curr_dir = env::current_dir().unwrap();
-    abs_path.push(curr_dir);
-    println!("{}", abs_path.display());
-    let mut iter = request.split_whitespace();
-    iter.next();
-    let requested_path = iter.next().unwrap();
-    abs_path.push(requested_path);
-    println!("{}", abs_path.display());
-    abs_path;
-    // TODO: Rewrite to avoid creating new string
-    &requested_path[1..]
-}
-
-*/

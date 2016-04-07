@@ -12,6 +12,7 @@ use std::env;
 use std::path::PathBuf;
 use threadpool::ThreadPool;
 use request::Request;
+use std::sync::mpsc::channel;
 
 const BUFFER_SIZE: usize = 20;
 
@@ -21,72 +22,14 @@ fn init_server() -> ThreadPool {
     assert!(cpu_count > 0);
 
     // initialize threadpool with 2 times the number of threads as the number of cpus
-    ThreadPool::new(2 * cpu_count)
+    let (tx, rx) = channel();
+    ThreadPool::new(2 * cpu_count, tx)
 }
 
-fn get_path_from_request(request: &str) -> &str {
-
-    let mut abs_path = PathBuf::new();
-    let curr_dir = env::current_dir().unwrap();
-    abs_path.push(curr_dir);
-    println!("{}", abs_path.display());
-    let mut iter = request.split_whitespace();
-    iter.next();
-    let requested_path = iter.next().unwrap();
-    abs_path.push(requested_path);
-    println!("{}", abs_path.display());
-    abs_path;
-    // TODO: Rewrite to avoid creating new string
-    &requested_path[1..]
-
-    //for word in request.split_whitespace() {
-    //    println!("{:?}", word);
-    //}
-}
 
 fn handle_client(mut stream: TcpStream) {
 
-    /*
-    let request = Request::new(stream);
-    let filename = request.filename;
-    try to open the file
-    if success
-       let response = Response::new(wofjaoij);
-    else
-       let response = Response::new(aoweifo);
-    "send"
-
-
-       */
-    // string to hold request body
-    /*
-    let mut request = String::new();
-    println!("Ready to read");
-
-    let mut read_buf = [0; BUFFER_SIZE];
-
-    loop {
-        let bytes_read = stream.read(&mut read_buf);
-        match bytes_read {
-            Ok(bytes_read) => {
-                let string_result = str::from_utf8(&read_buf).unwrap();
-                request.push_str(string_result);
-                if bytes_read < BUFFER_SIZE {
-                    break;
-                }
-            }
-            Err(e) => {
-                println!("Error reading stream");
-                break;
-            }
-        };
-    }*/
-
-
-    //let pathname = get_path_from_request(&request[..]);
     let request_obj = Request::new(&mut stream);
-    //let request_obj = Request::new("GET".to_string(), pathname.to_string(), "localhost:8080".to_string());
-
 
     let f = match File::open(request_obj.get_filename()) {
         Ok(mut f) => {
@@ -103,41 +46,6 @@ fn handle_client(mut stream: TcpStream) {
         }
     };
 
-   /*
-    // TODO: Content length should be inferred from the request, not hardcoded
-    let mut contents = [0; 1000];
-
-    // read request into string
-    let result = stream.read(&mut contents);
-    match result {
-        Ok(result) => {
-            let string_result = str::from_utf8(&contents).unwrap();
-            println!("{}", string_result);
-            let pathname = get_path_from_request(string_result);
-            println!("{:?}", pathname);
-            let f = match File::open(pathname) {
-                Ok(mut f) => {
-                    println!("OK!");
-                    let mut s = String::new();
-                    f.read_to_string(&mut s);
-                    println!("{}",s);
-                    stream.write(s.as_bytes());
-                }
-                Err(e) => {
-                    println!("NOT OK!");
-                    let mut error_file = File::open("error.html").unwrap();
-                    let mut error_vec = Vec::new();
-                    error_file.read_to_end(&mut error_vec);
-                    let error_byte_array = error_vec.as_slice();
-                    stream.write(error_byte_array);
-                }
-            };
-        }
-        Err(e) => { 
-            println!("Error when reading request");
-        }
-    }
-    */
 }
 
 
@@ -153,12 +61,6 @@ fn main() {
             Ok(stream) => {
                 // use move closure to give ownership of the stream to the
                 // child thread
-                /*
-                thread::spawn(move|| {
-                    println!("connection succeeded");
-                    handle_client(stream)
-                });*/
-
                 pool.execute(move|| {
                     println!("connection succeeded");
                     handle_client(stream)
