@@ -16,8 +16,6 @@ use request::Request;
 use std::sync::mpsc::{Sender, Receiver, channel};
 use chrono::*;
 
-
-
 const BUFFER_SIZE: usize = 20;
 const LOGGER_FILE: &'static str = "log.txt";
 
@@ -30,6 +28,26 @@ fn init_server() -> ThreadPool {
     ThreadPool::new(2 * cpu_count)
 }
 
+enum Status {
+    OK,
+    BAD_REQUEST,
+    NOT_FOUND
+}
+
+impl Status {
+    fn get_info(status: Status) -> StatusCode {
+        match status {
+            Status::OK => StatusCode { name: "OK".to_string(), response_code: 200 },
+            Status::BAD_REQUEST => StatusCode { name: "BAD REQUEST".to_string(), response_code: 400 },
+            Status::NOT_FOUND => StatusCode { name: "NOT FOUND".to_string(), response_code: 404 }
+        }
+    }
+}
+
+struct StatusCode {
+    name: String,
+    response_code: u8
+}
 
 fn handle_client(mut stream: TcpStream, tx: Sender<String>) {
 
@@ -37,12 +55,19 @@ fn handle_client(mut stream: TcpStream, tx: Sender<String>) {
 
     let f = match File::open(request_obj.get_filename()) {
         Ok(mut f) => {
-            let mut s = String::new();
-            f.read_to_string(&mut s);
-            stream.write(s.as_bytes());
+            let mut content = String::new();
+            f.read_to_string(&mut content);
+            let status = Status::get_info(Status::OK);
+            let response_header = format!("{} {}", status.response_code, status.name);
+            let response_str = format!("{} {}\n\n{}", request_obj.get_protocol(), response_header, content);
+            stream.write(response_str.as_bytes());
+            let mut log: String = String::new();
             let dt = UTC::now();
             let timestamp = dt.format("%Y-%m-%d %H:%M:%S").to_string();
-            tx.send(timestamp);
+            let request_str = request_obj.to_string();
+            let log = format!("{}\t{}\t{}\n", timestamp, request_str, response_header);
+
+            tx.send(log);
         }
         Err(e) => {
             let mut error_file = File::open("error.html").unwrap();

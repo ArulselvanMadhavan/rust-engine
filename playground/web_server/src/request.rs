@@ -103,7 +103,9 @@ impl Request {
         }
     }
 
-
+    pub fn to_string(&self) -> String {
+        format!("{} {} {}", &self.method, &self.filename, &self.protocol)
+    }
 
 }
 
