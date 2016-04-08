@@ -6,15 +6,17 @@ mod request;
 use std::net::{TcpListener, TcpStream};
 use std::thread;
 use std::io::prelude::*;
-use std::fs::File;
+use std::fs::{OpenOptions, File};
 use std::str;
 use std::env;
 use std::path::PathBuf;
 use threadpool::ThreadPool;
 use request::Request;
-use std::sync::mpsc::channel;
+use std::sync::mpsc::{Sender, Receiver, channel};
+
 
 const BUFFER_SIZE: usize = 20;
+const LOGGER_FILE: &'static str = "log.txt";
 
 fn init_server() -> ThreadPool {
     println!("{}", num_cpus::get());
@@ -22,12 +24,11 @@ fn init_server() -> ThreadPool {
     assert!(cpu_count > 0);
 
     // initialize threadpool with 2 times the number of threads as the number of cpus
-    let (tx, rx) = channel();
-    ThreadPool::new(2 * cpu_count, tx)
+    ThreadPool::new(2 * cpu_count)
 }
 
 
-fn handle_client(mut stream: TcpStream) {
+fn handle_client(mut stream: TcpStream, tx: Sender<String>) {
 
     let request_obj = Request::new(&mut stream);
 
@@ -36,6 +37,7 @@ fn handle_client(mut stream: TcpStream) {
             let mut s = String::new();
             f.read_to_string(&mut s);
             stream.write(s.as_bytes());
+            tx.send("Hello logger!".to_string());
         }
         Err(e) => {
             let mut error_file = File::open("error.html").unwrap();
@@ -48,6 +50,21 @@ fn handle_client(mut stream: TcpStream) {
 
 }
 
+fn init_logger_thread() -> Sender<String> {
+    let (tx, rx): (Sender<String>, Receiver<String>) = channel();
+    thread::spawn(move|| {
+        logger(rx);
+    });
+    tx
+}
+
+fn logger(rx: Receiver<String>) {
+    let mut log_file = OpenOptions::new().create(true).write(true).append(true).open(LOGGER_FILE.to_string()).unwrap();
+    loop {
+        let log = rx.recv().unwrap();
+        log_file.write(log.as_bytes());
+    }
+}
 
 fn main() {
 
@@ -55,15 +72,20 @@ fn main() {
 
     let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
 
+    let tx: Sender<String> = init_logger_thread();
+
     // accept connections and process them, spawning a new thread for each one
     for stream in listener.incoming() {
         match stream {
             Ok(stream) => {
+
+                let tx_clone = tx.clone();
+
                 // use move closure to give ownership of the stream to the
                 // child thread
                 pool.execute(move|| {
                     println!("connection succeeded");
-                    handle_client(stream)
+                    handle_client(stream, tx_clone)
                 });
 
             }
