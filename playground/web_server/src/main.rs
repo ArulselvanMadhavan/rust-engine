@@ -1,5 +1,6 @@
 extern crate threadpool;
 extern crate num_cpus;
+extern crate chrono;
 
 mod request;
 
@@ -13,6 +14,8 @@ use std::path::PathBuf;
 use threadpool::ThreadPool;
 use request::Request;
 use std::sync::mpsc::{Sender, Receiver, channel};
+use chrono::*;
+
 
 
 const BUFFER_SIZE: usize = 20;
@@ -37,7 +40,9 @@ fn handle_client(mut stream: TcpStream, tx: Sender<String>) {
             let mut s = String::new();
             f.read_to_string(&mut s);
             stream.write(s.as_bytes());
-            tx.send("Hello logger!".to_string());
+            let dt = UTC::now();
+            let timestamp = dt.format("%Y-%m-%d %H:%M:%S").to_string();
+            tx.send(timestamp);
         }
         Err(e) => {
             let mut error_file = File::open("error.html").unwrap();
