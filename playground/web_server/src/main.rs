@@ -16,7 +16,7 @@ use request::Request;
 use std::sync::mpsc::{Sender, Receiver, channel};
 use chrono::*;
 
-const BUFFER_SIZE: usize = 20;
+const BUFFER_SIZE: usize = 4096;
 const LOGGER_FILE: &'static str = "log.txt";
 
 fn init_server() -> ThreadPool {
@@ -55,12 +55,35 @@ fn handle_client(mut stream: TcpStream, tx: Sender<String>) {
 
     let f = match File::open(request_obj.get_filename()) {
         Ok(mut f) => {
-            let mut content = String::new();
-            f.read_to_string(&mut content);
+            //let mut content = String::new();
+            //f.read_to_string(&mut content);
+
             let status = Status::get_info(Status::OK);
             let response_header = format!("{} {}", status.response_code, status.name);
-            let response_str = format!("{} {}\n\n{}", request_obj.get_protocol(), response_header, content);
-            stream.write(response_str.as_bytes());
+            // write response header to stream
+            stream.write(format!("{} {}\n\n", request_obj.get_protocol(), response_header).as_bytes());
+
+            let mut read_buf = [0; BUFFER_SIZE];
+
+            loop {
+                let bytes_read = f.read(&mut read_buf);
+                match bytes_read {
+                    Ok(bytes_read) => {
+                        stream.write(&read_buf);
+                        if bytes_read < BUFFER_SIZE {
+                            break;
+                        }
+                    }
+                    Err(e) => {
+                        println!("Error reading file contents");
+                        break;
+                    }
+                };
+            }
+
+            
+            //let response_str = format!("{} {}\n\n{}", request_obj.get_protocol(), response_header, content);
+            //stream.write(response_str.as_bytes());
             let mut log: String = String::new();
             let dt = UTC::now();
             let timestamp = dt.format("%Y-%m-%d %H:%M:%S").to_string();
