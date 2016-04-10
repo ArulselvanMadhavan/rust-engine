@@ -52,3 +52,7 @@ Closures - FnOnce,FnMut,Fn
 http://stackoverflow.com/questions/30177395/when-does-a-closure-implement-fn-fnmut-and-fnonce
 http://huonw.github.io/blog/2015/05/finding-closure-in-rust/
 http://rustbyexample.com/fn/closures/input_parameters.html
+
+Lifetimes
+
+https://medium.com/@ericdreichert/how-i-think-about-rust-lifetimes-83a726aaa846#.f69856xy0
