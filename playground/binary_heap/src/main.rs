@@ -3,19 +3,22 @@ use std::fs::File;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::net::TcpStream;
-
+use std::fs::Metadata;
 #[derive(Debug)]
 struct FileJob {
-    //stream: TcpStream,
+    // stream: TcpStream,
     file: File,
-    filesize: u64
+    filesize: u64,
 }
 
 impl FileJob {
-    pub fn new(file: File, filesize: u64) -> FileJob {
+    pub fn new(filename: &str) -> FileJob {
+        let file = File::open(filename).unwrap();
+        let mut meta = file.metadata().unwrap();
+        let mut filesize = meta.len();
         FileJob {
             file: file,
-            filesize: filesize
+            filesize: filesize,
         }
     }
 }
@@ -44,21 +47,12 @@ impl PartialEq for FileJob {
     }
 }
 
-impl Eq for FileJob { }
+impl Eq for FileJob {}
 
 fn main() {
-    let file1 = File::open("file1.txt").unwrap();
-    let mut meta = file1.metadata().unwrap();
-    let mut filesize = meta.len();
-    let filejob1 = FileJob::new(file1, filesize);
-    let file2 = File::open("file2.txt").unwrap();
-    meta = file2.metadata().unwrap();
-    filesize = meta.len();
-    let filejob2 = FileJob::new(file2, filesize);
-    let file3 = File::open("file3.txt").unwrap();
-    meta = file3.metadata().unwrap();
-    filesize = meta.len();
-    let filejob3 = FileJob::new(file3, filesize);
+    let filejob1 = FileJob::new("file1.txt");
+    let filejob2 = FileJob::new("file2.txt");
+    let filejob3 = FileJob::new("file3.txt");
     assert_eq!(filejob1.cmp(&filejob2), Ordering::Less);
     assert_eq!(filejob2.cmp(&filejob1), Ordering::Greater);
     assert_eq!(filejob2.cmp(&filejob3), Ordering::Equal);
@@ -67,5 +61,5 @@ fn main() {
     heap.push(filejob1);
     heap.push(filejob2);
     let topjob = heap.peek();
-    println!("{:?}",topjob);
+    println!("{:?}", topjob);
 }
