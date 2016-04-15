@@ -9,6 +9,6 @@ struct Request{
 
 impl Request{
     pub fn new(stream:&mut TcpStream) -> Request{
-        
+
     }
 }

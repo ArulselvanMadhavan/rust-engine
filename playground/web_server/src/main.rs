@@ -1,8 +1,10 @@
-extern crate threadpool;
+// extern crate threadpool;
 extern crate num_cpus;
 extern crate chrono;
+extern crate rand;
 
 mod request;
+mod threadmanager;
 
 use std::net::{TcpListener, TcpStream};
 use std::thread;
@@ -11,9 +13,11 @@ use std::fs::{OpenOptions, File};
 use std::str;
 use std::env;
 use std::path::PathBuf;
-use threadpool::ThreadPool;
+// use threadpool::ThreadPool;
+use threadmanager::ThreadPool;
 use request::Request;
 use std::sync::mpsc::{Sender, Receiver, channel};
+use rand::Rng;
 use chrono::*;
 
 const BUFFER_SIZE: usize = 4096;
@@ -25,7 +29,7 @@ fn init_server() -> ThreadPool {
     assert!(cpu_count > 0);
 
     // initialize threadpool with 2 times the number of threads as the number of cpus
-    ThreadPool::new(2 * cpu_count)
+    ThreadPool::new(cpu_count,cpu_count)
 }
 
 enum Status {
@@ -81,7 +85,7 @@ fn handle_client(mut stream: TcpStream, tx: Sender<String>) {
                 };
             }
 
-            
+
             //let response_str = format!("{} {}\n\n{}", request_obj.get_protocol(), response_header, content);
             //stream.write(response_str.as_bytes());
             let mut log: String = String::new();
@@ -125,21 +129,23 @@ fn main() {
 
     let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
 
-    let tx: Sender<String> = init_logger_thread();
+    // let tx: Sender<String> = init_logger_thread();
 
     // accept connections and process them, spawning a new thread for each one
     for stream in listener.incoming() {
         match stream {
             Ok(stream) => {
 
-                let tx_clone = tx.clone();
+                // let tx_clone = tx.clone();
 
                 // use move closure to give ownership of the stream to the
                 // child thread
-                pool.execute(move|| {
-                    println!("connection succeeded");
-                    handle_client(stream, tx_clone)
-                });
+                // pool.execute(move|| {
+                //     println!("connection succeeded");
+                //     handle_client(stream, tx_clone)
+                // });
+                let mut rng = rand::thread_rng();
+                pool.execute(rng.gen::<u32>());
 
             }
             Err(e) => { /* connection failed */ }

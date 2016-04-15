@@ -6,6 +6,7 @@ authors = ["jlyneu <jly@ccs.neu.edu>"]
 [dependencies]
 num_cpus = "0.2"
 chrono = "0.2"
+rand = "0.3.14"
 
 [lib]
 name = "threadpool"
