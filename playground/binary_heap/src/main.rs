@@ -14,6 +14,5 @@ fn main() {
     let thread_pool = init_threads(8 as usize);
     for iter_count in 0..100 {
         let filejob = FileJob::new(format!("file{}.txt", rng.gen::<u8>()), rng.gen::<u8>());
-        
     }
 }
