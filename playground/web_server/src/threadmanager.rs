@@ -5,7 +5,7 @@ use std::sync::mpsc::{Sender, Receiver, channel, SendError};
 use std::thread;
 use std::thread::sleep;
 use std::time::Duration;
-use std::fs::{OpenOptions};
+use std::fs::OpenOptions;
 use std::error::Error;
 
 const LOGGER_FILE: &'static str = "log.txt";
@@ -80,21 +80,23 @@ impl ThreadPool {
                             rx: Arc<Mutex<Receiver<u32>>>,
                             heap: Arc<Mutex<BinaryHeap<u32>>>,
                             logger_tx: Sender<String>) {
-        let result = thread::Builder::new().name(thread_name).spawn(move || {
+        let result = thread::Builder::new().name(thread_name.clone()).spawn(move || {
             loop {
                 let message = {
-                    println!("Special unwrap receiver");
                     let job_receiver = rx.lock().unwrap();
                     job_receiver.recv()
                 };
                 match message {
                     Ok(job) => {
-                        println!("Special unwrap heap");
                         let mut heap_ref = heap.lock().unwrap();
                         heap_ref.push(job);
+                        logger_tx.send(format!("Pushing job {} from special thread {}",
+                                               job,
+                                               thread_name))
+                                 .unwrap();
                     }
-                    _ => {
-                        println!("Invalid Job sent");
+                    Err(e) => {
+                        println!("{:?}", e.description());
                     }
                 }
             }
@@ -120,7 +122,11 @@ impl ThreadPool {
                     None => {
                         continue;
                     }
-                    Some(data_u32) => println!("TID:{:?} Popped {:?}", thread_name, data_u32),
+                    Some(data_u32) => {
+                        // println!("TID:{:?} Popped {:?}", thread_name, data_u32);
+                        logger_tx.send(format!("TID:{:?} Popped {:?}", thread_name, data_u32))
+                                 .unwrap();
+                    }
                 }
             }
         });
