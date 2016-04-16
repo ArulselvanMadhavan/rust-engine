@@ -5,7 +5,7 @@ use std::sync::mpsc::{Sender, Receiver, channel, SendError};
 use std::thread;
 use std::thread::sleep;
 use std::time::Duration;
-use std::fs::{OpenOptions, File};
+use std::fs::{OpenOptions};
 use std::error::Error;
 
 const LOGGER_FILE: &'static str = "log.txt";
@@ -14,8 +14,7 @@ pub struct ThreadPool {
     heap: Arc<Mutex<BinaryHeap<u32>>>,
     rx: Arc<Mutex<Receiver<u32>>>,
     tx: Sender<u32>,
-    logger_tx: Sender<String>,
-    // logger_rx: Receiver<String>,
+    logger_tx: Sender<String>, // logger_rx: Receiver<String>,
 }
 
 impl ThreadPool {
@@ -41,15 +40,20 @@ impl ThreadPool {
             heap: heap,
             rx: rx.clone(),
             tx: tx,
-            logger_tx: logger_tx.clone(),
-            // logger_rx: logger_rx,
+            logger_tx: logger_tx.clone(), // logger_rx: logger_rx,
         }
     }
 
     fn spin_logger_thread(thread_name: String, logger_rx: Receiver<String>) {
-        thread::Builder::new().name(thread_name).spawn(move || {
+        let result = thread::Builder::new().name(thread_name).spawn(move || {
             ThreadPool::logger(logger_rx);
         });
+        match result {
+            Err(e) => {
+                println!("{:?}", e.description());
+            }
+            Ok(_) => {}
+        }
     }
 
 
@@ -97,14 +101,14 @@ impl ThreadPool {
         });
         match result {
             Ok(_) => println!("Special thread started"),
-            Err(e) => println!("Special thread creation failed"),
+            Err(e) => println!("Error:{}", e.description()),
         }
     }
 
     fn spin_normal_threads(thread_name: String,
                            heap: Arc<Mutex<BinaryHeap<u32>>>,
                            logger_tx: Sender<String>) {
-        thread::Builder::new().name(thread_name.clone()).spawn(move || {
+        let result = thread::Builder::new().name(thread_name.clone()).spawn(move || {
             sleep(Duration::new(1, 0));
             loop {
                 let data = {
@@ -120,6 +124,12 @@ impl ThreadPool {
                 }
             }
         });
+        match result {
+            Ok(_) => {}
+            Err(e) => {
+                println!("{:?}", e.description());
+            }
+        }
     }
 
     pub fn print_heap(&self) {
