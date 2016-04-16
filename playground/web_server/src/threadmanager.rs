@@ -6,6 +6,7 @@ use std::thread;
 use std::thread::sleep;
 use std::time::Duration;
 use std::fs::{OpenOptions, File};
+use std::error::Error;
 
 const LOGGER_FILE: &'static str = "log.txt";
 
@@ -13,6 +14,8 @@ pub struct ThreadPool {
     heap: Arc<Mutex<BinaryHeap<u32>>>,
     rx: Arc<Mutex<Receiver<u32>>>,
     tx: Sender<u32>,
+    logger_tx: Sender<String>,
+    // logger_rx: Receiver<String>,
 }
 
 impl ThreadPool {
@@ -38,6 +41,8 @@ impl ThreadPool {
             heap: heap,
             rx: rx.clone(),
             tx: tx,
+            logger_tx: logger_tx.clone(),
+            // logger_rx: logger_rx,
         }
     }
 
@@ -56,8 +61,14 @@ impl ThreadPool {
                                .open(LOGGER_FILE.to_string())
                                .unwrap();
         loop {
-            let log = logger_rx.recv().unwrap();
-            log_file.write(log.as_bytes());
+            // let log = logger_rx.recv().unwrap();
+            match logger_rx.recv() {
+                Ok(log) => log_file.write(log.as_bytes()),
+                Err(e) => {
+                    println!("{:?}", e.description());
+                    break;
+                }
+            };
         }
     }
 
