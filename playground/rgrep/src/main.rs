@@ -2,7 +2,6 @@ use std::io::prelude::*;
 use std::{io, fs, thread};
 use std::sync::mpsc::{sync_channel, SyncSender, Receiver};
 use std::sync::Arc;
-use std::io::BufReader;
 
 #[derive(Clone,Copy)]
 pub enum OutputMode {

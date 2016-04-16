@@ -46,16 +46,44 @@ impl Clone for BigInt {
     }
 }
 
-impl BigInt{
-    pub fn min_try1(self,other:Self)->Self{
+impl BigInt {
+    pub fn min_try1(self, other: Self) -> Self {
         debug_assert!(self.test_invariant() && other.test_invariant());
+        if self.data.len() < other.data.len() {
+            self
+        } else if self.data.len() > other.data.len() {
+            other
+        } else {
+            self
+        }
+    }
+
+    pub fn vec_min(v: &Vec<BigInt>) -> Option<BigInt> {
+        let mut min: Option<BigInt> = None;
+        for e in v.iter() {
+            let e = e.clone();
+            min = match min {
+                None => Some(e),
+                Some(n) => Some(e.min_try1(n)),
+            };
+        }
+        min
+    }
+
+    pub fn head<T>(v:&Vec<T>)->Option<&T>{
+        if v.len() > 0{
+            Some(&v[0])
+        }else{
+            None
+        }
     }
 }
 pub fn main() {
-    let v = vec![1,0, 1 << 16,0,0,0,0];
+    let v = vec![1, 0, 1 << 16, 0, 0, 0, 0];
     let b1 = BigInt::from_vec((&v).clone());
     println!("{:?}", b1);
     println!("{:?}", b1.test_invariant());
-    let b2 = BigInt::from_vec(v);
+    let b2 = BigInt::from_vec((&v).clone());
     println!("{:?}", b2.test_invariant());
+    println!("{:?}", BigInt::head(&v).unwrap());
 }
