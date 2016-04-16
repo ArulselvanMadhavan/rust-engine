@@ -7,20 +7,21 @@ use std::thread::sleep;
 use std::time::Duration;
 use std::fs::OpenOptions;
 use std::error::Error;
+use job::FileJob;
 
 const LOGGER_FILE: &'static str = "log.txt";
 
 pub struct ThreadPool {
-    heap: Arc<Mutex<BinaryHeap<u32>>>,
-    rx: Arc<Mutex<Receiver<u32>>>,
-    tx: Sender<u32>,
+    heap: Arc<Mutex<BinaryHeap<FileJob>>>,
+    rx: Arc<Mutex<Receiver<FileJob>>>,
+    tx: Sender<FileJob>,
     logger_tx: Sender<String>, // logger_rx: Receiver<String>,
 }
 
 impl ThreadPool {
     pub fn new(special_threads: usize, normal_threads: usize) -> ThreadPool {
-        let heap = Arc::new(Mutex::new(BinaryHeap::<u32>::new()));
-        let (tx, rx) = channel::<u32>();
+        let heap = Arc::new(Mutex::new(BinaryHeap::<FileJob>::new()));
+        let (tx, rx) = channel::<FileJob>();
         let (logger_tx, logger_rx) = channel::<String>();
         let rx = Arc::new(Mutex::new(rx));
         ThreadPool::spin_logger_thread("logger".to_string(), logger_rx);
@@ -33,7 +34,7 @@ impl ThreadPool {
         }
 
         for thread_id in 0..normal_threads {
-            let thread_name = format!("special_{}", thread_id);
+            let thread_name = format!("normal_{}", thread_id);
             ThreadPool::spin_normal_threads(thread_name, heap.clone(), logger_tx.clone());
         }
         ThreadPool {
@@ -77,8 +78,8 @@ impl ThreadPool {
     }
 
     fn spin_special_threads(thread_name: String,
-                            rx: Arc<Mutex<Receiver<u32>>>,
-                            heap: Arc<Mutex<BinaryHeap<u32>>>,
+                            rx: Arc<Mutex<Receiver<FileJob>>>,
+                            heap: Arc<Mutex<BinaryHeap<FileJob>>>,
                             logger_tx: Sender<String>) {
         let result = thread::Builder::new().name(thread_name.clone()).spawn(move || {
             loop {
@@ -89,11 +90,12 @@ impl ThreadPool {
                 match message {
                     Ok(job) => {
                         let mut heap_ref = heap.lock().unwrap();
-                        heap_ref.push(job);
-                        logger_tx.send(format!("Pushing job {} from special thread {}",
-                                               job,
+                        logger_tx.send(format!("Pushing job {} from special thread {}\n",
+                                               &job,
                                                thread_name))
                                  .unwrap();
+                        heap_ref.push(job);
+
                     }
                     Err(e) => {
                         println!("{:?}", e.description());
@@ -108,7 +110,7 @@ impl ThreadPool {
     }
 
     fn spin_normal_threads(thread_name: String,
-                           heap: Arc<Mutex<BinaryHeap<u32>>>,
+                           heap: Arc<Mutex<BinaryHeap<FileJob>>>,
                            logger_tx: Sender<String>) {
         let result = thread::Builder::new().name(thread_name.clone()).spawn(move || {
             sleep(Duration::new(1, 0));
@@ -124,7 +126,7 @@ impl ThreadPool {
                     }
                     Some(data_u32) => {
                         // println!("TID:{:?} Popped {:?}", thread_name, data_u32);
-                        logger_tx.send(format!("TID:{:?} Popped {:?}", thread_name, data_u32))
+                        logger_tx.send(format!("TID:{:?} Popped {:?}\n", thread_name, data_u32))
                                  .unwrap();
                     }
                 }
@@ -143,7 +145,7 @@ impl ThreadPool {
         println!("{:?}", heap);
     }
 
-    pub fn execute(&self, data: u32) -> Result<(), SendError<u32>> {
+    pub fn execute(&self, data: FileJob) -> Result<(), SendError<FileJob>> {
         self.tx.send(data)
     }
 }

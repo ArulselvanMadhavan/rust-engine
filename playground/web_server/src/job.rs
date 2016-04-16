@@ -1,51 +1,54 @@
 use std::io::prelude::*;
+use std::fmt;
+use std::fs;
 use std::fs::File;
 use std::net::TcpStream;
 use std::error::Error;
 use std::fs::metadata;
-
+use std::cmp::Ordering;
+use request::Request;
 const ERROR_FILENAME: &'static str = "error.html";
+const ERROR_FILESIZE: u64 = 0;
 
-struct FileJob {
+#[derive(Debug)]
+pub struct FileJob {
     stream: TcpStream,
-    //file: File,
     filesize: u64,
-    request_obj: Request
+    request_obj: Request,
 }
 
 impl FileJob {
-    pub fn new(stream:TcpStream) -> FileJob {
-        // let file = File::open(filename).unwrap();
-        // let mut meta = file.metadata().unwrap();
-        // let mut filesize = meta.len();
+    pub fn new(mut stream: TcpStream) -> FileJob {
         let request_obj = Request::new(&mut stream);
-        let file_metadata = match fs::metadata(request_obj.get_filename()) {
+        match fs::metadata(request_obj.get_filename()) {
             Ok(file_metadata) => {
-                file_metadata
+                FileJob {
+                    stream:stream,
+                    filesize: file_metadata.len(),
+                    request_obj: request_obj,
+                }
             }
             Err(e) => {
                 println!("{:?}", e.description());
-                fs::metadata(ERROR_FILENAME)
+                FileJob {
+                    stream:stream,
+                    filesize: ERROR_FILESIZE,
+                    request_obj: request_obj,
+                }
             }
         }
-        // let file = match File::open(request_obj.get_filename()) {
-        //     Ok(mut file) => {
-        //         file
-        //     }
-        //     Err(e) => {
-        //         println!("{:?}", e.description());
-        //         File::open(ERROR_FILENAME).unwrap()
-        //     }
-        // };
-        // let file_metadata = file.metadata()
+    }
+
+    pub fn new_test(mut stream: TcpStream, filesize: u64) -> FileJob {
+        let request_obj = Request::new(&mut stream);
         FileJob {
-            //file: file,
-            filename: request_obj.get_filename(),
-            filesize: file_metadata.len(),
-            request_obj: request_obj
+            stream:stream,
+            filesize: filesize,
+            request_obj: request_obj,
         }
     }
 }
+
 
 impl Ord for FileJob {
     fn cmp(&self, other: &Self) -> Ordering {
@@ -72,3 +75,15 @@ impl PartialEq for FileJob {
 }
 
 impl Eq for FileJob {}
+
+
+impl fmt::Display for FileJob {
+    // This trait requires `fmt` with this exact signature.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // Write strictly the first element into the supplied output
+        // stream: `f`. Returns `fmt::Result` which indicates whether the
+        // operation succeeded or failed. Note that `write!` uses syntax which
+        // is very similar to `println!`.
+        write!(f, "{}\t{}", self.request_obj.get_filename(),self.filesize)
+    }
+}

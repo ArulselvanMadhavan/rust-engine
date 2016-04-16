@@ -7,6 +7,7 @@ use std::collections::HashMap;
 
 const BUFFER_SIZE: usize = 20;
 
+#[derive(Debug)]
 pub struct Request {
     method: String,
     filename: String,
@@ -64,7 +65,7 @@ impl Request {
         let curr_dir = env::current_dir().unwrap();
         // split request by line
         let mut line_split = request.split("\n");
-        
+
         // parse the method, path, and protocol from the first line of the request
         // TODO: error handling, what if there is a space in file path?
         let mut first_line = line_split.next().unwrap().split_whitespace();
@@ -108,4 +109,3 @@ impl Request {
     }
 
 }
-

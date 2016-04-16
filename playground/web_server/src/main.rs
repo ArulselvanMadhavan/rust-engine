@@ -5,6 +5,7 @@ extern crate rand;
 
 mod request;
 mod threadmanager;
+mod job;
 
 use std::net::{TcpListener, TcpStream};
 use std::thread;
@@ -16,6 +17,7 @@ use std::path::PathBuf;
 // use threadpool::ThreadPool;
 use threadmanager::ThreadPool;
 use request::Request;
+use job::FileJob;
 use std::sync::mpsc::{Sender, Receiver, channel};
 use rand::Rng;
 use chrono::*;
@@ -145,7 +147,7 @@ fn main() {
                 //     handle_client(stream, tx_clone)
                 // });
                 let mut rng = rand::thread_rng();
-                pool.execute(rng.gen::<u32>());
+                pool.execute(FileJob::new_test(stream,rng.gen::<u64>()));
 
             }
             Err(e) => { /* connection failed */ }
