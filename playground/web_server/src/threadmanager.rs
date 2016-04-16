@@ -1,11 +1,10 @@
- #[allow(dead_code)]
+
+#[allow(dead_code)]
 use std::io::prelude::*;
 use std::collections::BinaryHeap;
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::{Sender, Receiver, channel};
 use std::thread;
-use std::thread::sleep;
-use std::time::Duration;
 use std::fs::OpenOptions;
 use std::error::Error;
 use job::FileJob;
@@ -71,10 +70,13 @@ impl ThreadPool {
             // let log = logger_rx.recv().unwrap();
             match logger_rx.recv() {
                 Ok(log) => {
-                    match log_file.write(log.as_bytes()){
-                        Ok(_) => {},
-                        Err(e) => {println!("Error in writing to log file {:?}", e.description());}
-                    }},
+                    match log_file.write(log.as_bytes()) {
+                        Ok(_) => {}
+                        Err(e) => {
+                            println!("Error in writing to log file {:?}", e.description());
+                        }
+                    }
+                }
                 Err(e) => {
                     println!("{:?}", e.description());
                     break;
@@ -119,20 +121,21 @@ impl ThreadPool {
                            heap: Arc<Mutex<BinaryHeap<FileJob>>>,
                            logger_tx: Sender<String>) {
         let result = thread::Builder::new().name(thread_name.clone()).spawn(move || {
-            sleep(Duration::new(1, 0));
             loop {
                 let data = {
                     let mut heap_ref = heap.lock().unwrap();
                     heap_ref.pop()
                 };
-                // sleep(Duration::new(0, 10000));
                 match data {
                     None => {
                         continue;
                     }
-                    Some(data_u32) => {
-                        logger_tx.send(format!("TID:{:?} Popped {:?}\n", thread_name, data_u32))
-                                 .unwrap();
+                    Some(mut filejob) => {
+                        let log = filejob.handle_client();
+                        match logger_tx.send(log){
+                            Ok(_)=>{},
+                            Err(e)=>{println!("Normal Logger Send Error{:?}",e.description());}
+                        }
                     }
                 }
             }
