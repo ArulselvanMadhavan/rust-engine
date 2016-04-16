@@ -1,9 +1,9 @@
 use std::net::TcpStream;
 use std::io::prelude::*;
 use std::str;
-use std::path::PathBuf;
 use std::env;
 use std::collections::HashMap;
+use std::error::Error;
 
 const BUFFER_SIZE: usize = 20;
 
@@ -33,7 +33,7 @@ impl Request {
                     }
                 }
                 Err(e) => {
-                    println!("Error reading stream");
+                    println!("Error reading stream {}",e.description());
                     break;
                 }
             };
@@ -42,6 +42,7 @@ impl Request {
         Request::parse_request(&request[..])
     }
 
+    #[allow(dead_code)]
     pub fn get_method(&self) -> &String {
         &self.method
     }
@@ -50,10 +51,12 @@ impl Request {
         &self.filename
     }
 
+    #[allow(dead_code)]
     pub fn get_protocol(&self) -> &String {
         &self.protocol
     }
 
+    #[allow(dead_code)]
     pub fn get_headers(&self) -> &HashMap<String, String> {
         &self.headers
     }
@@ -104,6 +107,7 @@ impl Request {
         }
     }
 
+    #[allow(dead_code)]
     pub fn to_string(&self) -> String {
         format!("{} {} {}", &self.method, &self.filename, &self.protocol)
     }

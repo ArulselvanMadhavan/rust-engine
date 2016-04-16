@@ -1,13 +1,12 @@
 use std::io::prelude::*;
 use std::fmt;
 use std::fs;
-use std::fs::File;
 use std::net::TcpStream;
 use std::error::Error;
-use std::fs::metadata;
 use std::cmp::Ordering;
 use request::Request;
-const ERROR_FILENAME: &'static str = "error.html";
+
+// const ERROR_FILENAME: &'static str = "error.html";
 const ERROR_FILESIZE: u64 = 0;
 
 #[derive(Debug)]
@@ -18,6 +17,7 @@ pub struct FileJob {
 }
 
 impl FileJob {
+    #[allow(dead_code)]
     pub fn new(mut stream: TcpStream) -> FileJob {
         let request_obj = Request::new(&mut stream);
         match fs::metadata(request_obj.get_filename()) {

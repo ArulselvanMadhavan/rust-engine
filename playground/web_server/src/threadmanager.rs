@@ -1,7 +1,8 @@
+ #[allow(dead_code)]
 use std::io::prelude::*;
 use std::collections::BinaryHeap;
 use std::sync::{Arc, Mutex};
-use std::sync::mpsc::{Sender, Receiver, channel, SendError};
+use std::sync::mpsc::{Sender, Receiver, channel};
 use std::thread;
 use std::thread::sleep;
 use std::time::Duration;
@@ -11,6 +12,7 @@ use job::FileJob;
 
 const LOGGER_FILE: &'static str = "log.txt";
 
+#[allow(dead_code)]
 pub struct ThreadPool {
     heap: Arc<Mutex<BinaryHeap<FileJob>>>,
     rx: Arc<Mutex<Receiver<FileJob>>>,
@@ -68,7 +70,11 @@ impl ThreadPool {
         loop {
             // let log = logger_rx.recv().unwrap();
             match logger_rx.recv() {
-                Ok(log) => log_file.write(log.as_bytes()),
+                Ok(log) => {
+                    match log_file.write(log.as_bytes()){
+                        Ok(_) => {},
+                        Err(e) => {println!("Error in writing to log file {:?}", e.description());}
+                    }},
                 Err(e) => {
                     println!("{:?}", e.description());
                     break;
@@ -119,13 +125,12 @@ impl ThreadPool {
                     let mut heap_ref = heap.lock().unwrap();
                     heap_ref.pop()
                 };
-                sleep(Duration::new(0, 10000));
+                // sleep(Duration::new(0, 10000));
                 match data {
                     None => {
                         continue;
                     }
                     Some(data_u32) => {
-                        // println!("TID:{:?} Popped {:?}", thread_name, data_u32);
                         logger_tx.send(format!("TID:{:?} Popped {:?}\n", thread_name, data_u32))
                                  .unwrap();
                     }
@@ -140,12 +145,17 @@ impl ThreadPool {
         }
     }
 
-    pub fn print_heap(&self) {
-        let heap = self.heap.clone();
-        println!("{:?}", heap);
-    }
+    // pub fn print_heap(&self) {
+    //     let heap = self.heap.clone();
+    //     println!("{:?}", heap);
+    // }
 
-    pub fn execute(&self, data: FileJob) -> Result<(), SendError<FileJob>> {
-        self.tx.send(data)
+    pub fn execute(&self, data: FileJob) {
+        match self.tx.send(data) {
+            Ok(_) => {}
+            Err(e) => {
+                println!("Error occured while sending job {}\n", e.description());
+            }
+        };
     }
 }
