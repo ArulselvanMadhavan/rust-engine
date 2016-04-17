@@ -46,7 +46,7 @@ impl Status {
 
 struct StatusCode {
     name: String,
-    response_code: u8,
+    response_code: u16,
 }
 
 #[derive(Debug)]
@@ -136,6 +136,14 @@ impl FileJob {
                 // }
             }
             Err(_) => {
+                // write response header
+                let status = Status::get_info(Status::NotFound);
+                let response_header = format!("{} {}", status.response_code, status.name);
+                self.stream.write(format!("{} {}\n\n",
+                                          self.request_obj.get_protocol(),
+                                          response_header)
+                                  .as_bytes());
+
                 let mut error_file = File::open("error.html").unwrap();
                 let mut error_vec = Vec::new();
                 match error_file.read_to_end(&mut error_vec) {
@@ -152,8 +160,6 @@ impl FileJob {
                                  e.description());
                     }
                 }
-                let status = Status::get_info(Status::NotFound);
-                let response_header = format!("{} {}", status.response_code, status.name);
                 format!("{}\t{}\t{}\n", timestamp, request_str, response_header)
             }
 

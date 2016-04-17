@@ -57,3 +57,6 @@ Lifetimes
 
 https://medium.com/@ericdreichert/how-i-think-about-rust-lifetimes-83a726aaa846#.f69856xy0
 http://www.charlesetc.com/rust/2015/10/29
+
+Running Apache on OSX
+https://coolestguidesontheplanet.com/get-apache-mysql-php-phpmyadmin-working-osx-10-10-yosemite/
