@@ -44,7 +44,19 @@ fn main() {
                     job.recv()
                 };
                 match message {
-                    Ok(job) => cache_copy.upsert(job.key.to_owned(), 1, &|count| *count += 1),
+                    Ok(job) => {
+                        let val = cache_copy.find(&job.key);
+                        match val {
+                            Some(_) => {
+                                // println!("Cache hit for {:?}", acc.get());
+                                // cache_copy.insert(job.key.to_owned(), acc.get()+1);
+                            },
+                            None => {
+                                println!("Element not found");
+                                cache_copy.upsert(job.key.to_owned(), 1, &|count| *count += 1);
+                            }
+                        }
+                    }
                     Err(e) => {
                         println!("{:?}", e.description());
                     }
@@ -92,7 +104,8 @@ fn main() {
     //     thread.join().unwrap();
     // }
 
-    sleep(Duration::new(5,0));ss
+    sleep(Duration::new(5, 0));
+    println!("Sleep ends");
     for cache_item in cache.iter() {
         println!("{:?}", cache_item);
     }
