@@ -10,3 +10,4 @@ path = "rust-concurrent-hashmap/src/lib.rs"
 [dependencies]
 spin = "0.3.5"
 rand = "0.3.14"
+chrono = "0.2"
