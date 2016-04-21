@@ -8,6 +8,9 @@ use request::Request;
 use std::fs::File;
 use chrono::UTC;
 use std::sync::mpsc::{Sender, Receiver, channel};
+use std::sync::Arc;
+use concurrent_hashmap::*;
+use threadmanager::Cache;
 
 // const ERROR_FILENAME: &'static str = "error.html";
 const ERROR_FILESIZE: u64 = 0;
@@ -88,11 +91,102 @@ impl FileJob {
         }
     }
 
+    //
+    // pub fn handle_client(&mut self) -> String {
+    //     let dt = UTC::now();
+    //     let timestamp = dt.format("%Y-%m-%d %H:%M:%S").to_string();
+    //     let request_str = self.request_obj.to_string();
+    //
+    //     match File::open(self.request_obj.get_filename()) {
+    //         Ok(mut f) => {
+    //             // let mut content = String::new();
+    //             // f.read_to_string(&mut content);
+    //
+    //             let status = Status::get_info(Status::Ok);
+    //             let response_header = format!("{} {}", status.response_code, status.name);
+    //             // write response header to stream
+    //             self.stream.write(format!("{} {}\n\n",
+    //                                       self.request_obj.get_protocol(),
+    //                                       response_header)
+    //                                   .as_bytes());
+    //
+    //             let mut read_buf = [0; BUFFER_SIZE];
+    //
+    //             loop {
+    //                 let bytes_read = f.read(&mut read_buf);
+    //                 match bytes_read {
+    //                     Ok(bytes_read) => {
+    //                         self.stream.write(&read_buf);
+    //                         if bytes_read < BUFFER_SIZE {
+    //                             break;
+    //                         }
+    //                     }
+    //                     Err(e) => {
+    //                         println!("Error reading file contents {}", e.description());
+    //                         break;
+    //                     }
+    //                 };
+    //             }
+    //
+    //
+    //             // let response_str = format!("{} {}\n\n{}", request_obj.get_protocol(), response_header, content);
+    //             // stream.write(response_str.as_bytes());
+    //             // let mut log: String = String::new();
+    //
+    //             format!("{}\t{}\t{}\n", timestamp, request_str, response_header)
+    //             // match logger_tx.send(log){
+    //             //     Ok(_)=>{},
+    //             //     Err(e)=>{println!("Error while sending to logger {:?}",e.description());}
+    //             // }
+    //         }
+    //         Err(_) => {
+    //             // write response header
+    //             let status = Status::get_info(Status::NotFound);
+    //             let response_header = format!("{} {}", status.response_code, status.name);
+    //             self.stream.write(format!("{} {}\n\n",
+    //                                       self.request_obj.get_protocol(),
+    //                                       response_header)
+    //                                   .as_bytes());
+    //
+    //             let mut error_file = File::open("error.html").unwrap();
+    //             let mut error_vec = Vec::new();
+    //             match error_file.read_to_end(&mut error_vec) {
+    //                 Ok(_) => {}
+    //                 Err(e) => {
+    //                     println!("Error occured while error file {:?}", e.description());
+    //                 }
+    //             }
+    //             let error_byte_array = error_vec.as_slice();
+    //             match self.stream.write(error_byte_array) {
+    //                 Ok(_) => {}
+    //                 Err(e) => {
+    //                     println!("Error occured while writing response to stream{:?}",
+    //                              e.description());
+    //                 }
+    //             }
+    //             format!("{}\t{}\t{}\n", timestamp, request_str, response_header)
+    //         }
+    //
+    //     }
+    //
+    // }
 
-    pub fn handle_client(&mut self)->String {
+
+    pub fn handle_client_with_cache(&mut self,
+                                    cache: &mut Arc<ConcHashMap<String, Cache>>)
+                                    -> String {
         let dt = UTC::now();
         let timestamp = dt.format("%Y-%m-%d %H:%M:%S").to_string();
         let request_str = self.request_obj.to_string();
+        let acc = cache.find(self.request_obj.get_filename());
+        match acc {
+            Some(acc) => {
+                println!("Cache hit");
+            }
+            None => {
+                println!("Cache miss...Reading from disk");
+            }
+        };
         match File::open(self.request_obj.get_filename()) {
             Ok(mut f) => {
                 // let mut content = String::new();
@@ -142,7 +236,7 @@ impl FileJob {
                 self.stream.write(format!("{} {}\n\n",
                                           self.request_obj.get_protocol(),
                                           response_header)
-                                  .as_bytes());
+                                      .as_bytes());
 
                 let mut error_file = File::open("error.html").unwrap();
                 let mut error_vec = Vec::new();

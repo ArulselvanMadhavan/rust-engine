@@ -2,6 +2,7 @@
 extern crate num_cpus;
 extern crate chrono;
 extern crate rand;
+extern crate concurrent_hashmap;
 
 mod request;
 mod threadmanager;

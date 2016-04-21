@@ -1,4 +1,3 @@
-
 #[allow(dead_code)]
 use std::io::prelude::*;
 use std::collections::BinaryHeap;
@@ -8,15 +7,25 @@ use std::thread;
 use std::fs::OpenOptions;
 use std::error::Error;
 use job::FileJob;
-
+use chrono::datetime::DateTime;
+use chrono::UTC;
+use concurrent_hashmap::*;
+use std::default::Default;
 const LOGGER_FILE: &'static str = "log.txt";
+
+#[derive(Debug)]
+pub struct Cache {
+    data: String,
+    last_modified: DateTime<UTC>,
+}
 
 #[allow(dead_code)]
 pub struct ThreadPool {
     heap: Arc<Mutex<BinaryHeap<FileJob>>>,
     rx: Arc<Mutex<Receiver<FileJob>>>,
     tx: Sender<FileJob>,
-    logger_tx: Sender<String>, // logger_rx: Receiver<String>,
+    logger_tx: Sender<String>,
+    cache: Arc<ConcHashMap<String, Cache>>,
 }
 
 impl ThreadPool {
@@ -34,15 +43,20 @@ impl ThreadPool {
                                              logger_tx.clone());
         }
 
+        let cache: Arc<ConcHashMap<String, Cache>> = Default::default();
         for thread_id in 0..normal_threads {
             let thread_name = format!("normal_{}", thread_id);
-            ThreadPool::spin_normal_threads(thread_name, heap.clone(), logger_tx.clone());
+            ThreadPool::spin_normal_threads(thread_name,
+                                            heap.clone(),
+                                            logger_tx.clone(),
+                                            cache.clone());
         }
         ThreadPool {
             heap: heap,
             rx: rx.clone(),
             tx: tx,
-            logger_tx: logger_tx.clone(), // logger_rx: logger_rx,
+            logger_tx: logger_tx.clone(),
+            cache: cache,
         }
     }
 
@@ -67,7 +81,6 @@ impl ThreadPool {
                                .open(LOGGER_FILE.to_string())
                                .unwrap();
         loop {
-            // let log = logger_rx.recv().unwrap();
             match logger_rx.recv() {
                 Ok(log) => {
                     match log_file.write(log.as_bytes()) {
@@ -119,7 +132,9 @@ impl ThreadPool {
 
     fn spin_normal_threads(thread_name: String,
                            heap: Arc<Mutex<BinaryHeap<FileJob>>>,
-                           logger_tx: Sender<String>) {
+                           logger_tx: Sender<String>,
+                           mut cache: Arc<ConcHashMap<String, Cache>>) {
+
         let result = thread::Builder::new().name(thread_name.clone()).spawn(move || {
             loop {
                 let data = {
@@ -131,10 +146,12 @@ impl ThreadPool {
                         continue;
                     }
                     Some(mut filejob) => {
-                        let log = filejob.handle_client();
-                        match logger_tx.send(log){
-                            Ok(_)=>{},
-                            Err(e)=>{println!("Normal Logger Send Error{:?}",e.description());}
+                        let log = filejob.handle_client_with_cache(&mut cache);
+                        match logger_tx.send(log) {
+                            Ok(_) => {}
+                            Err(e) => {
+                                println!("Normal Logger Send Error{:?}", e.description());
+                            }
                         }
                     }
                 }
@@ -159,6 +176,6 @@ impl ThreadPool {
             Err(e) => {
                 println!("Error occured while sending job {}\n", e.description());
             }
-        };
+        }
     }
 }
