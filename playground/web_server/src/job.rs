@@ -15,7 +15,7 @@ use threadmanager::Cache;
 // const ERROR_FILENAME: &'static str = "error.html";
 const ERROR_FILESIZE: u64 = 0;
 const BUFFER_SIZE: usize = 4096;
-
+const CACHE_THRESHOLD: u64 = 50000;
 enum Status {
     Ok,
     BadRequest,
@@ -91,7 +91,6 @@ impl FileJob {
         }
     }
 
-    //
     // pub fn handle_client(&mut self) -> String {
     //     let dt = UTC::now();
     //     let timestamp = dt.format("%Y-%m-%d %H:%M:%S").to_string();
@@ -185,6 +184,10 @@ impl FileJob {
             }
             None => {
                 println!("Cache miss...Reading from disk");
+                println!("{:?}\t{:?}",self.request_obj.get_filename(),self.filesize );
+                if self.filesize < CACHE_THRESHOLD {
+                    println!("Caching the file");
+                }
             }
         };
         match File::open(self.request_obj.get_filename()) {
