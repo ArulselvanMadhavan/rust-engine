@@ -181,87 +181,90 @@ impl FileJob {
         match acc {
             Some(acc) => {
                 println!("Cache hit");
+                let status = Status::get_info(Status::Ok);
+                let response_header = format!("{} {}", status.response_code, status.name);
+                self.stream.write(format!("{} {}\n\n",
+                                          self.request_obj.get_protocol(),
+                                          response_header).as_bytes());
+                self.stream.write(&acc.get().data[..]);
+                format!("{}\t{}\t{}\n", timestamp, request_str, response_header)
             }
             None => {
                 println!("Cache miss...Reading from disk");
                 println!("{:?}\t{:?}",self.request_obj.get_filename(),self.filesize );
-                if self.filesize < CACHE_THRESHOLD {
-                    println!("Caching the file");
-                }
-            }
-        };
-        match File::open(self.request_obj.get_filename()) {
-            Ok(mut f) => {
-                // let mut content = String::new();
-                // f.read_to_string(&mut content);
+                match File::open(self.request_obj.get_filename()) {
+                    Ok(mut f) => {
+                        let status = Status::get_info(Status::Ok);
+                        let response_header = format!("{} {}", status.response_code, status.name);
+                        self.stream.write(format!("{} {}\n\n",
+                                                  self.request_obj.get_protocol(),
+                                                  response_header).as_bytes());
 
-                let status = Status::get_info(Status::Ok);
-                let response_header = format!("{} {}", status.response_code, status.name);
-                // write response header to stream
-                self.stream.write(format!("{} {}\n\n",
-                                          self.request_obj.get_protocol(),
-                                          response_header)
-                                      .as_bytes());
+                        if self.filesize < CACHE_THRESHOLD {
+                            println!("Caching the file");
+                            let mut file_contents = Vec::with_capacity(self.filesize as usize);
+                            match f.read_to_end(&mut file_contents) {
+                                Ok(bytes_read) => {
+                                    self.stream.write(&file_contents);
+                                    let cache_obj = Cache { data: file_contents };
+                                    cache.insert(self.request_obj.get_filename().clone().to_string(), cache_obj);
+                                }
+                                Err(e) => {
+                                    println!("Error reading file: {:?}", e.description());
+                                }
+                            }
+                        } else {
+         
+                            let mut read_buf = [0; BUFFER_SIZE];
 
-                let mut read_buf = [0; BUFFER_SIZE];
-
-                loop {
-                    let bytes_read = f.read(&mut read_buf);
-                    match bytes_read {
-                        Ok(bytes_read) => {
-                            self.stream.write(&read_buf);
-                            if bytes_read < BUFFER_SIZE {
-                                break;
+                            loop {
+                                let bytes_read = f.read(&mut read_buf);
+                                match bytes_read {
+                                    Ok(bytes_read) => {
+                                        self.stream.write(&read_buf);
+                                        if bytes_read < BUFFER_SIZE {
+                                            break;
+                                        }
+                                    }
+                                    Err(e) => {
+                                        println!("Error reading file contents {}", e.description());
+                                        break;
+                                    }
+                                };
                             }
                         }
-                        Err(e) => {
-                            println!("Error reading file contents {}", e.description());
-                            break;
+                        format!("{}\t{}\t{}\n", timestamp, request_str, response_header)
+                    }
+                    Err(_) => {
+                        // write response header
+                        let status = Status::get_info(Status::NotFound);
+                        let response_header = format!("{} {}", status.response_code, status.name);
+                        self.stream.write(format!("{} {}\n\n",
+                                                  self.request_obj.get_protocol(),
+                                                  response_header)
+                                              .as_bytes());
+
+                        let mut error_file = File::open("error.html").unwrap();
+                        let mut error_vec = Vec::new();
+                        match error_file.read_to_end(&mut error_vec) {
+                            Ok(_) => {}
+                            Err(e) => {
+                                println!("Error occured while error file {:?}", e.description());
+                            }
                         }
-                    };
-                }
-
-
-                // let response_str = format!("{} {}\n\n{}", request_obj.get_protocol(), response_header, content);
-                // stream.write(response_str.as_bytes());
-                // let mut log: String = String::new();
-
-                format!("{}\t{}\t{}\n", timestamp, request_str, response_header)
-                // match logger_tx.send(log){
-                //     Ok(_)=>{},
-                //     Err(e)=>{println!("Error while sending to logger {:?}",e.description());}
-                // }
-            }
-            Err(_) => {
-                // write response header
-                let status = Status::get_info(Status::NotFound);
-                let response_header = format!("{} {}", status.response_code, status.name);
-                self.stream.write(format!("{} {}\n\n",
-                                          self.request_obj.get_protocol(),
-                                          response_header)
-                                      .as_bytes());
-
-                let mut error_file = File::open("error.html").unwrap();
-                let mut error_vec = Vec::new();
-                match error_file.read_to_end(&mut error_vec) {
-                    Ok(_) => {}
-                    Err(e) => {
-                        println!("Error occured while error file {:?}", e.description());
+                        let error_byte_array = error_vec.as_slice();
+                        match self.stream.write(error_byte_array) {
+                            Ok(_) => {}
+                            Err(e) => {
+                                println!("Error occured while writing response to stream{:?}",
+                                         e.description());
+                            }
+                        }
+                        format!("{}\t{}\t{}\n", timestamp, request_str, response_header)
                     }
                 }
-                let error_byte_array = error_vec.as_slice();
-                match self.stream.write(error_byte_array) {
-                    Ok(_) => {}
-                    Err(e) => {
-                        println!("Error occured while writing response to stream{:?}",
-                                 e.description());
-                    }
-                }
-                format!("{}\t{}\t{}\n", timestamp, request_str, response_header)
             }
-
         }
-
     }
 }
 

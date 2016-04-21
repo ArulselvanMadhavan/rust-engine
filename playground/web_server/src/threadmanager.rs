@@ -15,8 +15,8 @@ const LOGGER_FILE: &'static str = "log.txt";
 
 #[derive(Debug)]
 pub struct Cache {
-    data: String,
-    last_modified: DateTime<UTC>,
+    pub data: Vec<u8>,
+    //last_modified: DateTime<UTC>,
 }
 
 #[allow(dead_code)]
