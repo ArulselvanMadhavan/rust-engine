@@ -172,7 +172,8 @@ impl FileJob {
 
 
     pub fn handle_client_with_cache(&mut self,
-                                    cache: &mut Arc<ConcHashMap<String, Cache>>)
+                                    cache: &mut Arc<ConcHashMap<String, Cache>>,
+                                    cache_tx: &mut Sender<(String, Cache)>)
                                     -> String {
         let dt = UTC::now();
         let timestamp = dt.format("%Y-%m-%d %H:%M:%S").to_string();
@@ -185,20 +186,22 @@ impl FileJob {
                 let response_header = format!("{} {}", status.response_code, status.name);
                 self.stream.write(format!("{} {}\n\n",
                                           self.request_obj.get_protocol(),
-                                          response_header).as_bytes());
+                                          response_header)
+                                      .as_bytes());
                 self.stream.write(&acc.get().data[..]);
                 format!("{}\t{}\t{}\n", timestamp, request_str, response_header)
             }
             None => {
                 println!("Cache miss...Reading from disk");
-                println!("{:?}\t{:?}",self.request_obj.get_filename(),self.filesize );
+                println!("{:?}\t{:?}", self.request_obj.get_filename(), self.filesize);
                 match File::open(self.request_obj.get_filename()) {
                     Ok(mut f) => {
                         let status = Status::get_info(Status::Ok);
                         let response_header = format!("{} {}", status.response_code, status.name);
                         self.stream.write(format!("{} {}\n\n",
                                                   self.request_obj.get_protocol(),
-                                                  response_header).as_bytes());
+                                                  response_header)
+                                              .as_bytes());
 
                         if self.filesize < CACHE_THRESHOLD {
                             println!("Caching the file");
@@ -207,14 +210,20 @@ impl FileJob {
                                 Ok(bytes_read) => {
                                     self.stream.write(&file_contents);
                                     let cache_obj = Cache { data: file_contents };
-                                    cache.insert(self.request_obj.get_filename().clone().to_string(), cache_obj);
+                                    // Send this to a cache thread and have it write to the cache
+                                    // cache.insert(self.request_obj
+                                    //                  .get_filename()
+                                    //                  .clone()
+                                    //                  .to_string(),
+                                    //              cache_obj);
+                                    cache_tx.send((self.request_obj.get_filename().to_owned(),cache_obj));
                                 }
                                 Err(e) => {
                                     println!("Error reading file: {:?}", e.description());
                                 }
                             }
                         } else {
-         
+
                             let mut read_buf = [0; BUFFER_SIZE];
 
                             loop {

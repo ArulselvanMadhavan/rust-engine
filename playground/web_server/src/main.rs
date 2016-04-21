@@ -30,8 +30,8 @@ fn init_server() -> ThreadPool {
     assert!(cpu_count > 0);
 
     // initialize threadpool with 2 times the number of threads as the number of cpus
-    //ThreadPool::new(cpu_count,cpu_count)
-    ThreadPool::new(4, 4)
+    ThreadPool::new(cpu_count,cpu_count)
+    // ThreadPool::new(1, 4)
 }
 
 
