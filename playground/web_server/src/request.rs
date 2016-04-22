@@ -26,10 +26,16 @@ impl Request {
             let bytes_read = stream.read(&mut read_buf);
             match bytes_read {
                 Ok(bytes_read) => {
-                    let string_result = str::from_utf8(&read_buf).unwrap();
-                    request.push_str(string_result);
-                    if bytes_read < BUFFER_SIZE {
-                        break;
+                    match str::from_utf8(&read_buf) {
+                        Ok(string_result) => {
+                            request.push_str(string_result);
+                            if bytes_read < BUFFER_SIZE {
+                                break;
+                            }
+                        }
+                        Err(e) => {
+                            println!("Error converting bytes to string: {:?}", e.description());
+                        }
                     }
                 }
                 Err(e) => {
