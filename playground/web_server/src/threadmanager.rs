@@ -19,6 +19,40 @@ pub struct Cache {
     pub data: Vec<u8>, // last_modified: DateTime<UTC>,
 }
 
+pub struct Special_Thread_Stats {
+    thread_name: String,
+    rx: Arc<Mutex<Receiver<TcpStream>>>,
+    heap: Arc<Mutex<BinaryHeap<FileJob>>>,
+    logger_tx: Sender<String>,
+}
+
+impl Drop for Special_Thread_Stats {
+    fn drop(&mut self) {
+        ThreadPool::spin_special_threads(self.thread_name.to_owned(),
+                                         self.rx.to_owned(),
+                                         self.heap.to_owned(),
+                                         self.logger_tx.to_owned());
+    }
+}
+
+pub struct Normal_Thread_Stats {
+    thread_name: String,
+    heap: Arc<Mutex<BinaryHeap<FileJob>>>,
+    logger_tx: Sender<String>,
+    cache: Arc<ConcHashMap<String, Cache>>,
+    cache_tx: Sender<(String, Cache)>,
+}
+
+impl Drop for Normal_Thread_Stats {
+    fn drop(&mut self) {
+        ThreadPool::spin_normal_threads(self.thread_name.to_owned(),
+                                        self.heap.to_owned(),
+                                        self.logger_tx.to_owned(),
+                                        self.cache.to_owned(),
+                                        self.cache_tx.to_owned());
+    }
+}
+
 #[allow(dead_code)]
 pub struct ThreadPool {
     heap: Arc<Mutex<BinaryHeap<FileJob>>>,
@@ -71,6 +105,7 @@ impl ThreadPool {
                          cache: Arc<ConcHashMap<String, Cache>>,
                          cache_rx: Receiver<(String, Cache)>) {
         let result = thread::Builder::new().name(thread_name).spawn(move || {
+
             loop {
                 match cache_rx.recv() {
                     Ok(tuple_obj) => {
@@ -135,12 +170,21 @@ impl ThreadPool {
                             mut heap: Arc<Mutex<BinaryHeap<FileJob>>>,
                             mut logger_tx: Sender<String>) {
         let result = thread::Builder::new().name(thread_name.clone()).spawn(move || {
+            let mut thread_stats = Special_Thread_Stats {
+                thread_name: thread_name,
+                rx: rx,
+                heap: heap,
+                logger_tx: logger_tx,
+            };
             loop {
                 let message = {
-                    let job_receiver = rx.lock().unwrap();
+                    let job_receiver = thread_stats.rx.lock().unwrap();
                     job_receiver.recv()
                 };
-                ThreadPool::process_filejob(message, &mut heap, &mut logger_tx, &thread_name);
+                ThreadPool::process_filejob(message,
+                                            &mut thread_stats.heap,
+                                            &mut thread_stats.logger_tx,
+                                            &thread_stats.thread_name);
             }
         });
         match result {
@@ -196,9 +240,16 @@ impl ThreadPool {
                            mut cache_tx: Sender<(String, Cache)>) {
 
         let result = thread::Builder::new().name(thread_name.clone()).spawn(move || {
+            let mut thread_stats = Normal_Thread_Stats {
+                thread_name: thread_name,
+                heap: heap,
+                logger_tx: logger_tx,
+                cache: cache,
+                cache_tx: cache_tx,
+            };
             loop {
                 let data = {
-                    let mut heap_ref = heap.lock().unwrap();
+                    let mut heap_ref = thread_stats.heap.lock().unwrap();
                     heap_ref.pop()
                 };
                 match data {
@@ -206,8 +257,9 @@ impl ThreadPool {
                         continue;
                     }
                     Some(mut filejob) => {
-                        let log = filejob.handle_client_with_cache(&mut cache, &mut cache_tx);
-                        match logger_tx.send(log) {
+                        let log = filejob.handle_client_with_cache(&mut thread_stats.cache,
+                                                                   &mut thread_stats.cache_tx);
+                        match thread_stats.logger_tx.send(log) {
                             Ok(_) => {}
                             Err(e) => {
                                 println!("Normal Logger Send Error{:?}", e.description());
