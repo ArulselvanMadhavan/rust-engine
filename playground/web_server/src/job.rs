@@ -192,8 +192,6 @@ impl FileJob {
                 format!("{}\t{}\t{}\n", timestamp, request_str, response_header)
             }
             None => {
-                println!("Cache miss...Reading from disk");
-                println!("{:?}\t{:?}", self.request_obj.get_filename(), self.filesize);
                 match File::open(self.request_obj.get_filename()) {
                     Ok(mut f) => {
                         let status = Status::get_info(Status::Ok);

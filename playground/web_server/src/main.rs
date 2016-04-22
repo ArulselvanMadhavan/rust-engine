@@ -31,7 +31,7 @@ fn init_server() -> ThreadPool {
 
     // initialize threadpool with 2 times the number of threads as the number of cpus
     ThreadPool::new(cpu_count,cpu_count)
-    // ThreadPool::new(1, 4)
+    // ThreadPool::new(2, 6)
 }
 
 
@@ -58,7 +58,6 @@ fn main() {
     let pool = init_server();
 
     let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
-    let mut count = 0;
     // let tx: Sender<String> = init_logger_thread();
 
     // accept connections and process them, spawning a new thread for each one
@@ -76,8 +75,6 @@ fn main() {
                 // });
                 // let mut rng = rand::thread_rng();
                 pool.execute(stream);
-                println!("{}", count);
-                count += 1;
             }
             Err(e) => { println!("{:?}",e.description() ); }
         }
