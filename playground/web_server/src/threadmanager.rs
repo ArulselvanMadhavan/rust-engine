@@ -19,14 +19,14 @@ pub struct Cache {
     pub data: Vec<u8>, // last_modified: DateTime<UTC>,
 }
 
-pub struct Special_Thread_Stats {
+pub struct SpecialThreadStats {
     thread_name: String,
     rx: Arc<Mutex<Receiver<TcpStream>>>,
     heap: Arc<Mutex<BinaryHeap<FileJob>>>,
     logger_tx: Sender<String>,
 }
 
-impl Drop for Special_Thread_Stats {
+impl Drop for SpecialThreadStats {
     fn drop(&mut self) {
         ThreadPool::spin_special_threads(self.thread_name.to_owned(),
                                          self.rx.to_owned(),
@@ -35,7 +35,7 @@ impl Drop for Special_Thread_Stats {
     }
 }
 
-pub struct Normal_Thread_Stats {
+pub struct NormalThreadStats {
     thread_name: String,
     heap: Arc<Mutex<BinaryHeap<FileJob>>>,
     logger_tx: Sender<String>,
@@ -43,13 +43,42 @@ pub struct Normal_Thread_Stats {
     cache_tx: Sender<(String, Cache)>,
 }
 
-impl Drop for Normal_Thread_Stats {
+impl Drop for NormalThreadStats {
     fn drop(&mut self) {
+        println!("Restarting normal thread");
         ThreadPool::spin_normal_threads(self.thread_name.to_owned(),
                                         self.heap.to_owned(),
                                         self.logger_tx.to_owned(),
                                         self.cache.to_owned(),
                                         self.cache_tx.to_owned());
+    }
+}
+
+
+pub struct LoggerThreadStats {
+    thread_name: String,
+    logger_rx: Arc<Mutex<Receiver<String>>>,
+}
+
+impl Drop for LoggerThreadStats {
+    fn drop(&mut self) {
+        println!("Restarting Logger thread");
+        ThreadPool::spin_logger_thread(self.thread_name.to_owned(), self.logger_rx.clone());
+    }
+}
+
+pub struct CacheThreadStats {
+    thread_name: String,
+    cache: Arc<ConcHashMap<String, Cache>>,
+    cache_rx: Arc<Mutex<Receiver<(String, Cache)>>>,
+}
+
+impl Drop for CacheThreadStats {
+    fn drop(&mut self) {
+        println!("Restarting Cache thread");
+        ThreadPool::spin_cache_thread(self.thread_name.to_owned(),
+                                      self.cache.to_owned(),
+                                      self.cache_rx.to_owned())
     }
 }
 
@@ -71,7 +100,9 @@ impl ThreadPool {
         let (cache_tx, cache_rx) = channel::<(String, Cache)>();
 
         let rx = Arc::new(Mutex::new(rx));
-        ThreadPool::spin_logger_thread("logger".to_string(), logger_rx);
+        let logger_rx = Arc::new(Mutex::new(logger_rx));
+        let cache_rx = Arc::new(Mutex::new(cache_rx));
+        ThreadPool::spin_logger_thread("logger".to_string(), logger_rx.clone());
         for thread_id in 0..special_threads {
             let thread_name = format!("special_{}", thread_id);
             ThreadPool::spin_special_threads(thread_name,
@@ -82,7 +113,7 @@ impl ThreadPool {
 
         let cache: Arc<ConcHashMap<String, Cache>> = Default::default();
         let thread_name = format!("cache_{}", 1);
-        ThreadPool::spin_cache_thread(thread_name, cache.clone(), cache_rx);
+        ThreadPool::spin_cache_thread(thread_name, cache.clone(), cache_rx.clone());
         for thread_id in 0..normal_threads {
             let thread_name = format!("normal_{}", thread_id);
             ThreadPool::spin_normal_threads(thread_name,
@@ -103,16 +134,24 @@ impl ThreadPool {
 
     fn spin_cache_thread(thread_name: String,
                          cache: Arc<ConcHashMap<String, Cache>>,
-                         cache_rx: Receiver<(String, Cache)>) {
-        let result = thread::Builder::new().name(thread_name).spawn(move || {
-
+                         cache_rx: Arc<Mutex<Receiver<(String, Cache)>>>) {
+        let result = thread::Builder::new().name(thread_name.clone()).spawn(move || {
+            let thread_stats = CacheThreadStats {
+                thread_name: thread_name,
+                cache: cache,
+                cache_rx: cache_rx,
+            };
             loop {
-                match cache_rx.recv() {
+                let message = {
+                    let obj_receiver = thread_stats.cache_rx.lock().unwrap();
+                    obj_receiver.recv()
+                };
+                match message {
                     Ok(tuple_obj) => {
                         let key = tuple_obj.0;
                         let cache_obj = tuple_obj.1;
                         println!("Caching key {:?}", key);
-                        cache.insert(key, cache_obj);
+                        thread_stats.cache.insert(key, cache_obj);
                     }
                     Err(e) => {
                         println!("Error while caching\t{:?}", e.description());
@@ -127,9 +166,13 @@ impl ThreadPool {
             Ok(_) => {}
         }
     }
-    fn spin_logger_thread(thread_name: String, logger_rx: Receiver<String>) {
-        let result = thread::Builder::new().name(thread_name).spawn(move || {
-            ThreadPool::logger(logger_rx);
+    fn spin_logger_thread(thread_name: String, logger_rx: Arc<Mutex<Receiver<String>>>) {
+        let result = thread::Builder::new().name(thread_name.clone()).spawn(move || {
+            let mut thread_stats = LoggerThreadStats {
+                thread_name: thread_name,
+                logger_rx: logger_rx,
+            };
+            ThreadPool::logger(&mut thread_stats.logger_rx);
         });
         match result {
             Err(e) => {
@@ -140,7 +183,7 @@ impl ThreadPool {
     }
 
 
-    fn logger(logger_rx: Receiver<String>) {
+    fn logger(logger_rx: &mut Arc<Mutex<Receiver<String>>>) {
         let mut log_file = OpenOptions::new()
                                .create(true)
                                .write(true)
@@ -148,7 +191,11 @@ impl ThreadPool {
                                .open(LOGGER_FILE.to_string())
                                .unwrap();
         loop {
-            match logger_rx.recv() {
+            let message = {
+                let msg_receiver = logger_rx.lock().unwrap();
+                msg_receiver.recv()
+            };
+            match message {
                 Ok(log) => {
                     match log_file.write(log.as_bytes()) {
                         Ok(_) => {}
@@ -167,10 +214,10 @@ impl ThreadPool {
 
     fn spin_special_threads(thread_name: String,
                             rx: Arc<Mutex<Receiver<TcpStream>>>,
-                            mut heap: Arc<Mutex<BinaryHeap<FileJob>>>,
-                            mut logger_tx: Sender<String>) {
+                            heap: Arc<Mutex<BinaryHeap<FileJob>>>,
+                            logger_tx: Sender<String>) {
         let result = thread::Builder::new().name(thread_name.clone()).spawn(move || {
-            let mut thread_stats = Special_Thread_Stats {
+            let mut thread_stats = SpecialThreadStats {
                 thread_name: thread_name,
                 rx: rx,
                 heap: heap,
@@ -198,7 +245,7 @@ impl ThreadPool {
                        logger_tx: &mut Sender<String>,
                        thread_name: &str) {
         match message {
-            Ok(mut stream) => {
+            Ok(stream) => {
                 let job = FileJob::new(stream);
                 let message: String = format!("Attempting to push job {} from special thread {}\n",
                                               &job,
@@ -236,11 +283,11 @@ impl ThreadPool {
     fn spin_normal_threads(thread_name: String,
                            heap: Arc<Mutex<BinaryHeap<FileJob>>>,
                            logger_tx: Sender<String>,
-                           mut cache: Arc<ConcHashMap<String, Cache>>,
-                           mut cache_tx: Sender<(String, Cache)>) {
+                           cache: Arc<ConcHashMap<String, Cache>>,
+                           cache_tx: Sender<(String, Cache)>) {
 
         let result = thread::Builder::new().name(thread_name.clone()).spawn(move || {
-            let mut thread_stats = Normal_Thread_Stats {
+            let mut thread_stats = NormalThreadStats {
                 thread_name: thread_name,
                 heap: heap,
                 logger_tx: logger_tx,
