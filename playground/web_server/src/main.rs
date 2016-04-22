@@ -75,7 +75,7 @@ fn main() {
                 //     handle_client(stream, tx_clone)
                 // });
                 // let mut rng = rand::thread_rng();
-                pool.execute(FileJob::new(stream));
+                pool.execute(stream);
 
             }
             Err(e) => { println!("{:?}",e.description() ); }

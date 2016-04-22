@@ -11,6 +11,7 @@ use chrono::datetime::DateTime;
 use chrono::UTC;
 use concurrent_hashmap::*;
 use std::default::Default;
+use std::net::TcpStream;
 const LOGGER_FILE: &'static str = "log.txt";
 
 #[derive(Clone,Debug)]
@@ -21,8 +22,8 @@ pub struct Cache {
 #[allow(dead_code)]
 pub struct ThreadPool {
     heap: Arc<Mutex<BinaryHeap<FileJob>>>,
-    rx: Arc<Mutex<Receiver<FileJob>>>,
-    tx: Sender<FileJob>,
+    rx: Arc<Mutex<Receiver<TcpStream>>>,
+    tx: Sender<TcpStream>,
     logger_tx: Sender<String>,
     cache: Arc<ConcHashMap<String, Cache>>,
     cache_tx: Sender<(String, Cache)>,
@@ -31,7 +32,7 @@ pub struct ThreadPool {
 impl ThreadPool {
     pub fn new(special_threads: usize, normal_threads: usize) -> ThreadPool {
         let heap = Arc::new(Mutex::new(BinaryHeap::<FileJob>::new()));
-        let (tx, rx) = channel::<FileJob>();
+        let (tx, rx) = channel::<TcpStream>();
         let (logger_tx, logger_rx) = channel::<String>();
         let (cache_tx, cache_rx) = channel::<(String, Cache)>();
 
@@ -130,7 +131,7 @@ impl ThreadPool {
     }
 
     fn spin_special_threads(thread_name: String,
-                            rx: Arc<Mutex<Receiver<FileJob>>>,
+                            rx: Arc<Mutex<Receiver<TcpStream>>>,
                             mut heap: Arc<Mutex<BinaryHeap<FileJob>>>,
                             mut logger_tx: Sender<String>) {
         let result = thread::Builder::new().name(thread_name.clone()).spawn(move || {
@@ -148,19 +149,20 @@ impl ThreadPool {
         }
     }
 
-    fn process_filejob(message: Result<FileJob, RecvError>,
+    fn process_filejob(message: Result<TcpStream, RecvError>,
                        heap: &mut Arc<Mutex<BinaryHeap<FileJob>>>,
                        logger_tx: &mut Sender<String>,
                        thread_name: &str) {
         match message {
-            Ok(job) => {
+            Ok(mut stream) => {
+                let job = FileJob::new(stream);
+                let message: String = format!("Attempting to push job {} from special thread {}\n",
+                                              &job,
+                                              thread_name);
+                ThreadPool::send_to_logger(logger_tx, message, thread_name);
                 match heap.lock() {
                     Ok(mut heap_ref) => {
-                        let message: String = format!("Pushing job {} from special thread {}\n",
-                                                      &job,
-                                                      thread_name);
                         heap_ref.push(job);
-                        ThreadPool::send_to_logger(logger_tx, message, thread_name);
                     }
                     Err(e) => {
                         println!("{:?}\tUnable to acquire lock on the heap\t{:?}",
@@ -228,8 +230,8 @@ impl ThreadPool {
     //     println!("{:?}", heap);
     // }
 
-    pub fn execute(&self, data: FileJob) {
-        match self.tx.send(data) {
+    pub fn execute(&self, stream: TcpStream) {
+        match self.tx.send(stream) {
             Ok(_) => {}
             Err(e) => {
                 println!("Error occured while sending job {}\n", e.description());
