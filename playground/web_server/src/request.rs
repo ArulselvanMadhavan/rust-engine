@@ -12,11 +12,10 @@ pub struct Request {
     method: String,
     filename: String,
     protocol: String,
-    headers: HashMap<String, String>
+    headers: HashMap<String, String>,
 }
 
 impl Request {
-
     pub fn new(stream: &mut TcpStream) -> Request {
         let mut request = String::new();
 
@@ -39,7 +38,7 @@ impl Request {
                     }
                 }
                 Err(e) => {
-                    println!("Error reading stream {}",e.description());
+                    println!("Error reading stream {}", e.description());
                     break;
                 }
             };
@@ -71,11 +70,9 @@ impl Request {
         // hashmap to store header values
         let mut header_map: HashMap<String, String> = HashMap::new();
         // get current directory path
-        //let curr_dir = env::current_dir().unwrap();
+        // let curr_dir = env::current_dir().unwrap();
         let curr_dir = match env::current_dir() {
-            Ok(dir) => {
-                dir
-            }
+            Ok(dir) => dir,
             Err(e) => {
                 println!("Error getting current directory: {:?}", e.description());
                 panic!();
@@ -86,11 +83,9 @@ impl Request {
 
         // parse the method, path, and protocol from the first line of the request
         // TODO: error handling, what if there is a space in file path?
-        //let mut first_line = line_split.next().unwrap().split_whitespace();
+        // let mut first_line = line_split.next().unwrap().split_whitespace();
         let mut first_line = match line_split.next() {
-            Some(line) => {
-                line.split_whitespace()
-            }
+            Some(line) => line.split_whitespace(),
             None => {
                 panic!("Request is empty");
             }
@@ -98,22 +93,18 @@ impl Request {
 
         let method = first_line.next().unwrap().to_string();
 
-        //let rel_path = first_line.next().unwrap();
+        // let rel_path = first_line.next().unwrap();
         let rel_path = match first_line.next() {
-            Some(path) => {
-                path
-            }
+            Some(path) => path,
             None => {
                 panic!("No path was provided in request");
             }
         };
         let filename = curr_dir.display().to_string() + &rel_path.to_string();
 
-        //let protocol = first_line.next().unwrap().to_string();
+        // let protocol = first_line.next().unwrap().to_string();
         let protocol = match first_line.next() {
-            Some(prot) => {
-                prot.to_string()
-            }
+            Some(prot) => prot.to_string(),
             None => {
                 panic!("No protocol was provided in request");
             }
@@ -124,11 +115,9 @@ impl Request {
         // the pieces again
         for line in line_split {
             let mut colon_split = line.split(":");
-            //let key = colon_split.next().unwrap().to_string();
+            // let key = colon_split.next().unwrap().to_string();
             let key = match colon_split.next() {
-                Some(k) => {
-                    k.to_string()
-                }
+                Some(k) => k.to_string(),
                 None => {
                     panic!("Missing header name");
                 }
@@ -150,7 +139,7 @@ impl Request {
             method: method,
             filename: filename,
             protocol: protocol,
-            headers: header_map
+            headers: header_map,
         }
     }
 
@@ -158,5 +147,4 @@ impl Request {
     pub fn to_string(&self) -> String {
         format!("{} {} {}", &self.method, &self.filename, &self.protocol)
     }
-
 }

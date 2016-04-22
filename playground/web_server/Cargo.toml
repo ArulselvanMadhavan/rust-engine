@@ -8,6 +8,8 @@ spin = "0.3.5"
 num_cpus = "0.2"
 chrono = "0.2"
 rand = "0.3.14"
+docopt = "0.6"
+rustc-serialize = "0.3"
 
 [lib]
 name = "concurrent_hashmap"

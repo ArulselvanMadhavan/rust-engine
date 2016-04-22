@@ -93,7 +93,11 @@ pub struct ThreadPool {
 }
 
 impl ThreadPool {
-    pub fn new(special_threads: usize, normal_threads: usize) -> ThreadPool {
+    pub fn new(special_threads: usize,
+               normal_threads: usize,
+               logger_threads: usize,
+               cache_threads: usize)
+               -> ThreadPool {
         let heap = Arc::new(Mutex::new(BinaryHeap::<FileJob>::new()));
         let (tx, rx) = channel::<TcpStream>();
         let (logger_tx, logger_rx) = channel::<String>();
@@ -102,7 +106,10 @@ impl ThreadPool {
         let rx = Arc::new(Mutex::new(rx));
         let logger_rx = Arc::new(Mutex::new(logger_rx));
         let cache_rx = Arc::new(Mutex::new(cache_rx));
-        ThreadPool::spin_logger_thread("logger".to_string(), logger_rx.clone());
+        for thread_id in 0..logger_threads {
+            let thread_name = format!("logger_{}", thread_id);
+            ThreadPool::spin_logger_thread(thread_name, logger_rx.clone());
+        }
         for thread_id in 0..special_threads {
             let thread_name = format!("special_{}", thread_id);
             ThreadPool::spin_special_threads(thread_name,
@@ -112,8 +119,10 @@ impl ThreadPool {
         }
 
         let cache: Arc<ConcHashMap<String, Cache>> = Default::default();
-        let thread_name = format!("cache_{}", 1);
-        ThreadPool::spin_cache_thread(thread_name, cache.clone(), cache_rx.clone());
+        for thread_id in 0..cache_threads {
+            let thread_name = format!("cache_{}", thread_id);
+            ThreadPool::spin_cache_thread(thread_name, cache.clone(), cache_rx.clone());
+        }
         for thread_id in 0..normal_threads {
             let thread_name = format!("normal_{}", thread_id);
             ThreadPool::spin_normal_threads(thread_name,
@@ -317,7 +326,9 @@ impl ThreadPool {
             }
         });
         match result {
-            Ok(_) => {}
+            Ok(_) => {
+                println!("Worker thread started");
+            }
             Err(e) => {
                 println!("{:?}", e.description());
             }

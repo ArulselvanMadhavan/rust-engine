@@ -1,0 +1,70 @@
+Pushing job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_0
+2016-04-22 00:08:14	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+Pushing job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_1
+Pushing job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_1
+Pushing job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_1
+Pushing job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_1
+Pushing job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_1
+Pushing job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_1
+Pushing job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_1
+Pushing job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_1
+Pushing job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_1
+Pushing job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_1
+Pushing job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_1
+2016-04-22 00:12:00	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+2016-04-22 00:12:00	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.0	200 OK
+2016-04-22 00:12:00	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.0	200 OK
+2016-04-22 00:12:00	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.0	200 OK
+2016-04-22 00:12:00	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.0	200 OK
+2016-04-22 00:12:00	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.0	200 OK
+2016-04-22 00:12:00	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.0	200 OK
+2016-04-22 00:12:00	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.0	200 OK
+2016-04-22 00:12:00	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.0	200 OK
+2016-04-22 00:12:00	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.0	200 OK
+2016-04-22 00:12:00	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.0	200 OK
+Pushing job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_0
+2016-04-22 00:17:34	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+Pushing job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_0
+2016-04-22 00:17:46	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+Pushing job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_0
+2016-04-22 00:17:47	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+Pushing job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_0
+2016-04-22 00:17:48	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+Pushing job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_1
+2016-04-22 00:17:50	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+Pushing job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_0
+2016-04-22 00:30:54	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+Pushing job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_0
+2016-04-22 00:30:56	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+Pushing job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_1
+2016-04-22 00:30:57	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+Attempting to push job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_0
+2016-04-22 01:02:54	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+Attempting to push job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_1
+2016-04-22 01:02:55	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+Attempting to push job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_0
+2016-04-22 01:02:56	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+Attempting to push job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_1
+2016-04-22 12:38:09	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+Attempting to push job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_0
+2016-04-22 12:38:11	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+Attempting to push job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_1
+2016-04-22 12:38:12	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+Attempting to push job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_0
+2016-04-22 12:38:13	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+Attempting to push job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_0
+2016-04-22 13:12:50	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+Attempting to push job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_1
+2016-04-22 13:12:51	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+Attempting to push job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_0
+2016-04-22 13:12:52	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+Attempting to push job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_1
+2016-04-22 13:12:55	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+Attempting to push job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_0
+2016-04-22 13:30:38	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+Attempting to push job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_1
+2016-04-22 13:30:39	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+Attempting to push job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_0
+2016-04-22 13:30:40	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
+Attempting to push job /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html	191 from special thread special_1
+2016-04-22 13:30:41	GET /home/arulselvanmadhavan/rust-engine/playground/web_server/foo.html HTTP/1.1	200 OK
