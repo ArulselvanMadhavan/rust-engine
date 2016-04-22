@@ -74,7 +74,7 @@ fn main() {
                 //     println!("connection succeeded");
                 //     handle_client(stream, tx_clone)
                 // });
-                let mut rng = rand::thread_rng();
+                // let mut rng = rand::thread_rng();
                 pool.execute(FileJob::new(stream));
 
             }

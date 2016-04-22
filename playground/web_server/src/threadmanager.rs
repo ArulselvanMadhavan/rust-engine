@@ -2,7 +2,7 @@
 use std::io::prelude::*;
 use std::collections::BinaryHeap;
 use std::sync::{Arc, Mutex};
-use std::sync::mpsc::{Sender, Receiver, channel};
+use std::sync::mpsc::{Sender, Receiver, channel, RecvError};
 use std::thread;
 use std::fs::OpenOptions;
 use std::error::Error;
@@ -17,14 +17,6 @@ const LOGGER_FILE: &'static str = "log.txt";
 pub struct Cache {
     pub data: Vec<u8>, // last_modified: DateTime<UTC>,
 }
-
-// impl Clone for Receiver<Cache>{
-//     fn clone(&self)->Self{
-//         Cache{
-//             data:self.data.clone(),
-//         }
-//     }
-// }
 
 #[allow(dead_code)]
 pub struct ThreadPool {
@@ -139,28 +131,15 @@ impl ThreadPool {
 
     fn spin_special_threads(thread_name: String,
                             rx: Arc<Mutex<Receiver<FileJob>>>,
-                            heap: Arc<Mutex<BinaryHeap<FileJob>>>,
-                            logger_tx: Sender<String>) {
+                            mut heap: Arc<Mutex<BinaryHeap<FileJob>>>,
+                            mut logger_tx: Sender<String>) {
         let result = thread::Builder::new().name(thread_name.clone()).spawn(move || {
             loop {
                 let message = {
                     let job_receiver = rx.lock().unwrap();
                     job_receiver.recv()
                 };
-                match message {
-                    Ok(job) => {
-                        let mut heap_ref = heap.lock().unwrap();
-                        logger_tx.send(format!("Pushing job {} from special thread {}\n",
-                                               &job,
-                                               thread_name))
-                                 .unwrap();
-                        heap_ref.push(job);
-
-                    }
-                    Err(e) => {
-                        println!("{:?}", e.description());
-                    }
-                }
+                ThreadPool::process_filejob(message, &mut heap, &mut logger_tx, &thread_name);
             }
         });
         match result {
@@ -169,6 +148,45 @@ impl ThreadPool {
         }
     }
 
+    fn process_filejob(message: Result<FileJob, RecvError>,
+                       heap: &mut Arc<Mutex<BinaryHeap<FileJob>>>,
+                       logger_tx: &mut Sender<String>,
+                       thread_name: &str) {
+        match message {
+            Ok(job) => {
+                match heap.lock() {
+                    Ok(mut heap_ref) => {
+                        let message: String = format!("Pushing job {} from special thread {}\n",
+                                                      &job,
+                                                      thread_name);
+                        heap_ref.push(job);
+                        ThreadPool::send_to_logger(logger_tx, message, thread_name);
+                    }
+                    Err(e) => {
+                        println!("{:?}\tUnable to acquire lock on the heap\t{:?}",
+                                 thread_name,
+                                 e.description());
+                    }
+                };
+            }
+            Err(e) => {
+                println!("{:?}\tError in receiving filejob\t{:?}",
+                         thread_name,
+                         e.description());
+            }
+        };
+    }
+
+    fn send_to_logger(logger_tx: &mut Sender<String>, message: String, thread_name: &str) {
+        match logger_tx.send(message) {
+            Ok(_) => {}
+            Err(e) => {
+                println!("{:?} received an error when sending to logger.\t{:?}",
+                         thread_name,
+                         e.description());
+            }
+        };
+    }
     fn spin_normal_threads(thread_name: String,
                            heap: Arc<Mutex<BinaryHeap<FileJob>>>,
                            logger_tx: Sender<String>,
