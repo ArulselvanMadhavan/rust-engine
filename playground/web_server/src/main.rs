@@ -73,7 +73,7 @@ fn main() {
                 //     handle_client(stream, tx_clone)
                 // });
                 let mut rng = rand::thread_rng();
-                pool.execute(FileJob::new_test(stream,rng.gen::<u64>()));
+                pool.execute(stream);
 
             }
             Err(e) => { println!("{:?}",e.description() ); }

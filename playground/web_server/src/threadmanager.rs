@@ -7,6 +7,7 @@ use std::sync::mpsc::{Sender, Receiver, channel};
 use std::thread;
 use std::fs::OpenOptions;
 use std::error::Error;
+use std::net::TcpStream;
 use job::FileJob;
 
 const LOGGER_FILE: &'static str = "log.txt";
@@ -14,15 +15,15 @@ const LOGGER_FILE: &'static str = "log.txt";
 #[allow(dead_code)]
 pub struct ThreadPool {
     heap: Arc<Mutex<BinaryHeap<FileJob>>>,
-    rx: Arc<Mutex<Receiver<FileJob>>>,
-    tx: Sender<FileJob>,
+    rx: Arc<Mutex<Receiver<TcpStream>>>,
+    tx: Sender<TcpStream>,
     logger_tx: Sender<String>, // logger_rx: Receiver<String>,
 }
 
 impl ThreadPool {
     pub fn new(special_threads: usize, normal_threads: usize) -> ThreadPool {
         let heap = Arc::new(Mutex::new(BinaryHeap::<FileJob>::new()));
-        let (tx, rx) = channel::<FileJob>();
+        let (tx, rx) = channel::<TcpStream>();
         let (logger_tx, logger_rx) = channel::<String>();
         let rx = Arc::new(Mutex::new(rx));
         ThreadPool::spin_logger_thread("logger".to_string(), logger_rx);
@@ -86,7 +87,7 @@ impl ThreadPool {
     }
 
     fn spin_special_threads(thread_name: String,
-                            rx: Arc<Mutex<Receiver<FileJob>>>,
+                            rx: Arc<Mutex<Receiver<TcpStream>>>,
                             heap: Arc<Mutex<BinaryHeap<FileJob>>>,
                             logger_tx: Sender<String>) {
         let result = thread::Builder::new().name(thread_name.clone()).spawn(move || {
@@ -96,7 +97,8 @@ impl ThreadPool {
                     job_receiver.recv()
                 };
                 match message {
-                    Ok(job) => {
+                    Ok(stream) => {
+                        let job = FileJob::new(stream);
                         let mut heap_ref = heap.lock().unwrap();
                         logger_tx.send(format!("Pushing job {} from special thread {}\n",
                                                &job,
@@ -153,8 +155,8 @@ impl ThreadPool {
     //     println!("{:?}", heap);
     // }
 
-    pub fn execute(&self, data: FileJob) {
-        match self.tx.send(data) {
+    pub fn execute(&self, stream: TcpStream) {
+        match self.tx.send(stream) {
             Ok(_) => {}
             Err(e) => {
                 println!("Error occured while sending job {}\n", e.description());
