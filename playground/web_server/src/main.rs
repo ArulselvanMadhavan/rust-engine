@@ -26,10 +26,10 @@ Options:
 
 #[derive(Debug, RustcDecodable)]
 struct Args {
-    arg_special_threads_count: usize,
-    arg_worker_threads_count: usize,
-    arg_logger_threads_count: usize,
-    arg_cache_threads_count: usize,
+    arg_SpecialThreadsCount: usize,
+    arg_WorkerThreadsCount: usize,
+    arg_LoggerThreadsCount: usize,
+    arg_CacheThreadsCount: usize,
 }
 
 fn init_server(special_threads_count:usize,
@@ -47,10 +47,10 @@ fn main() {
     let args: Args = Docopt::new(USAGE)
                          .and_then(|d| d.decode())
                          .unwrap_or_else(|e| e.exit());
-    let pool = init_server(args.arg_special_threads_count,
-    args.arg_worker_threads_count,
-    args.arg_logger_threads_count,
-    args.arg_cache_threads_count);
+    let pool = init_server(args.arg_SpecialThreadsCount,
+    args.arg_WorkerThreadsCount,
+    args.arg_LoggerThreadsCount,
+    args.arg_CacheThreadsCount);
     let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
 
     // accept connections and process them, spawning a new thread for each one
