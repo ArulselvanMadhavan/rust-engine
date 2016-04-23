@@ -31,7 +31,7 @@ fn init_server() -> ThreadPool {
 
     // initialize threadpool with 2 times the number of threads as the number of cpus
     //ThreadPool::new(cpu_count,cpu_count)
-    ThreadPool::new(4, 4)
+    ThreadPool::new(12, 2)
 }
 
 
@@ -75,7 +75,7 @@ fn main() {
                 //     handle_client(stream, tx_clone)
                 // });
                 let mut rng = rand::thread_rng();
-                pool.execute(FileJob::new(stream));
+                pool.execute(stream);
 
             }
             Err(e) => { println!("{:?}",e.description() ); }

@@ -180,7 +180,6 @@ impl FileJob {
         let acc = cache.find(self.request_obj.get_filename());
         match acc {
             Some(acc) => {
-                println!("Cache hit");
                 let status = Status::get_info(Status::Ok);
                 let response_header = format!("{} {}", status.response_code, status.name);
                 self.stream.write(format!("{} {}\n\n",
@@ -190,8 +189,6 @@ impl FileJob {
                 format!("{}\t{}\t{}\n", timestamp, request_str, response_header)
             }
             None => {
-                println!("Cache miss...Reading from disk");
-                println!("{:?}\t{:?}",self.request_obj.get_filename(),self.filesize );
                 match File::open(self.request_obj.get_filename()) {
                     Ok(mut f) => {
                         let status = Status::get_info(Status::Ok);
