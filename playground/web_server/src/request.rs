@@ -4,6 +4,7 @@ use std::str;
 use std::env;
 use std::collections::HashMap;
 use std::error::Error;
+use error::{RequestError,RequestResult,RequestErrorKind};
 
 const BUFFER_SIZE: usize = 20;
 
@@ -16,7 +17,7 @@ pub struct Request {
 }
 
 impl Request {
-    pub fn new(stream: &mut TcpStream) -> Request {
+    pub fn new(stream: &mut TcpStream) -> RequestResult {
         let mut request = String::new();
 
         let mut read_buf = [0; BUFFER_SIZE];
@@ -43,7 +44,6 @@ impl Request {
                 }
             };
         }
-
         Request::parse_request(&request[..])
     }
 
@@ -66,7 +66,7 @@ impl Request {
         &self.headers
     }
 
-    fn parse_request(request: &str) -> Request {
+    fn parse_request(request: &str) -> RequestResult {
         // hashmap to store header values
         let mut header_map: HashMap<String, String> = HashMap::new();
         // get current directory path
@@ -97,7 +97,7 @@ impl Request {
         let rel_path = match first_line.next() {
             Some(path) => path,
             None => {
-                panic!("No path was provided in request");
+                return Err(RequestError::new("Request is empty".to_string(), RequestErrorKind::EmptyRequest))
             }
         };
         let filename = curr_dir.display().to_string() + &rel_path.to_string();
@@ -135,12 +135,12 @@ impl Request {
             value.pop();
             header_map.insert(key, value);
         }
-        Request {
+        Ok(Request {
             method: method,
             filename: filename,
             protocol: protocol,
             headers: header_map,
-        }
+        })
     }
 
     #[allow(dead_code)]

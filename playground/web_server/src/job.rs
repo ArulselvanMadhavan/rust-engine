@@ -7,10 +7,11 @@ use std::cmp::Ordering;
 use request::Request;
 use std::fs::File;
 use chrono::UTC;
-use std::sync::mpsc::{Sender, Receiver, channel};
 use std::sync::Arc;
+use std::sync::mpsc::Sender;
 use concurrent_hashmap::*;
 use threadmanager::Cache;
+use error::{FileJobError,FileJobErrorKind,FileJobResult};
 
 // const ERROR_FILENAME: &'static str = "error.html";
 const ERROR_FILESIZE: u64 = 0;
@@ -61,7 +62,35 @@ pub struct FileJob {
 
 impl FileJob {
     #[allow(dead_code)]
-    pub fn new(mut stream: TcpStream) -> FileJob {
+    pub fn new(mut stream: TcpStream) -> FileJobResult {
+        match Request::new(&mut stream) {
+            Ok(request) => {
+                match fs::metadata(request.get_filename()) {
+                    Ok(file_metadata) => {
+                        Ok(FileJob {
+                            stream: stream,
+                            filesize: file_metadata.len(),
+                            request_obj: request,
+                        })
+                    }
+                    Err(e) => {
+                        println!("{:?}", e.description());
+                        Ok(FileJob {
+                            stream: stream,
+                            filesize: ERROR_FILESIZE,
+                            request_obj: request
+                        })
+                    }
+                }
+            }
+            Err(_) => {
+                FileJob::send_bad_request_error(stream);
+                Err(FileJobError::new("Empty FileJob".to_string(), FileJobErrorKind::EmptyFileJob))
+            }
+        }
+
+/*
+
         let request_obj = Request::new(&mut stream);
         match fs::metadata(request_obj.get_filename()) {
             Ok(file_metadata) => {
@@ -79,17 +108,17 @@ impl FileJob {
                     request_obj: request_obj,
                 }
             }
-        }
+        }*/
     }
 
-    pub fn new_test(mut stream: TcpStream, filesize: u64) -> FileJob {
+    /*pub fn new_test(mut stream: TcpStream, filesize: u64) -> FileJob {
         let request_obj = Request::new(&mut stream);
         FileJob {
             stream: stream,
             filesize: filesize,
             request_obj: request_obj,
         }
-    }
+    }*/
 
     // pub fn handle_client(&mut self) -> String {
     //     let dt = UTC::now();
@@ -170,6 +199,20 @@ impl FileJob {
     //
     // }
 
+    pub fn send_bad_request_error(mut stream: TcpStream) -> String {
+        let dt = UTC::now();
+        let timestamp = dt.format("%Y-%m-%d %H:%M:%S").to_string();
+        let status = Status::get_info(Status::BadRequest);
+        let response_header = format!("{} {}", status.response_code, status.name);
+        match stream.write(format!("{} {}\n\n", "HTTP/1.1", response_header).as_bytes()) {
+            Ok(_) => {}
+            Err(e) => {
+                println!("Error writing bad request response: {:?}", e.description());
+            }
+        };
+        format!("{}\t{}\t{}\n", timestamp, "EMPTY REQUEST", response_header)
+    }
+
 
     pub fn handle_client_with_cache(&mut self,
                                     cache: &mut Arc<ConcHashMap<String, Cache>>,
@@ -181,7 +224,6 @@ impl FileJob {
         let acc = cache.find(self.request_obj.get_filename());
         match acc {
             Some(acc) => {
-                println!("Cache hit");
                 let status = Status::get_info(Status::Ok);
                 let response_header = format!("{} {}", status.response_code, status.name);
                 self.stream.write(format!("{} {}\n\n",
@@ -202,10 +244,9 @@ impl FileJob {
                                               .as_bytes());
 
                         if self.filesize < CACHE_THRESHOLD {
-                            println!("Caching the file");
                             let mut file_contents = Vec::with_capacity(self.filesize as usize);
                             match f.read_to_end(&mut file_contents) {
-                                Ok(bytes_read) => {
+                                Ok(_) => {
                                     self.stream.write(&file_contents);
                                     let cache_obj = Cache { data: file_contents };
                                     // Send this to a cache thread and have it write to the cache

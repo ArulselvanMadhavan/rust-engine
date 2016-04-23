@@ -1,31 +1,48 @@
-use std::error;
-use std::fmt;
-use std::sync::TryLockError;
+use request::Request;
+use job::FileJob;
 
-enum ServerError{
-    LockBusy(TryLockError)
+
+pub type RequestResult = Result<Request, RequestError>;
+
+#[derive(Debug)]
+pub struct RequestError {
+    kind: RequestErrorKind,
+    pub message: String
 }
 
-impl fmt::Display for ServerError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            ServerError::LockBusy(ref err) => write!(f, "LockBusy error: {}", err),
+#[derive(Debug)]
+pub enum RequestErrorKind {
+    EmptyRequest
+}
+
+impl RequestError {
+    pub fn new(msg: String, kind: RequestErrorKind) -> RequestError {
+        RequestError {
+            kind: kind,
+            message: msg
         }
     }
 }
 
-impl error::Error for ServerError {
-    fn description(&self) -> &str {
-        // Both underlying errors already impl `Error`, so we defer to their
-        // implementations.
-        match *self {
-            ServerError::LockBusy(ref err) => err.description(),
-        }
-    }
+pub type FileJobResult = Result<FileJob, FileJobError>;
 
-    fn cause(&self) -> Option<&error::Error> {
-        match *self {
-            CliError::LockBusy(ref err) => Some(err),
+#[derive(Debug)]
+pub struct FileJobError {
+    kind: FileJobErrorKind,
+    pub message: String
+}
+
+#[derive(Debug)]
+pub enum FileJobErrorKind {
+    EmptyFileJob
+}
+
+impl FileJobError {
+    pub fn new(msg: String, kind: FileJobErrorKind) -> FileJobError {
+        FileJobError {
+            kind: kind,
+            message: msg
         }
     }
 }
+

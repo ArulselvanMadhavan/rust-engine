@@ -7,8 +7,6 @@ use std::thread;
 use std::fs::OpenOptions;
 use std::error::Error;
 use job::FileJob;
-use chrono::datetime::DateTime;
-use chrono::UTC;
 use concurrent_hashmap::*;
 use std::default::Default;
 use std::net::TcpStream;
@@ -16,7 +14,7 @@ const LOGGER_FILE: &'static str = "log.txt";
 
 #[derive(Clone,Debug)]
 pub struct Cache {
-    pub data: Vec<u8>, // last_modified: DateTime<UTC>,
+    pub data: Vec<u8>
 }
 
 pub struct SpecialThreadStats {
@@ -159,7 +157,6 @@ impl ThreadPool {
                     Ok(tuple_obj) => {
                         let key = tuple_obj.0;
                         let cache_obj = tuple_obj.1;
-                        println!("Caching key {:?}", key);
                         thread_stats.cache.insert(key, cache_obj);
                     }
                     Err(e) => {
@@ -255,19 +252,26 @@ impl ThreadPool {
                        thread_name: &str) {
         match message {
             Ok(stream) => {
-                let job = FileJob::new(stream);
-                let message: String = format!("Attempting to push job {} from special thread {}\n",
+                match FileJob::new(stream) {
+                    Ok(job) => {
+                        /*let message: String = format!("Attempting to push job {} from special thread {}\n",
                                               &job,
                                               thread_name);
-                ThreadPool::send_to_logger(logger_tx, message, thread_name);
-                match heap.lock() {
-                    Ok(mut heap_ref) => {
-                        heap_ref.push(job);
+                        ThreadPool::send_to_logger(logger_tx, message, thread_name);*/
+                        match heap.lock() {
+                            Ok(mut mut_heap_ref) => {
+                                mut_heap_ref.push(job);
+                            }
+                            Err(e) => {
+                                println!("{:?}\tUnable to acquire lock on the heap\t{:?}",
+                                         thread_name,
+                                         e.description());
+                            }
+                        };
                     }
-                    Err(e) => {
-                        println!("{:?}\tUnable to acquire lock on the heap\t{:?}",
-                                 thread_name,
-                                 e.description());
+                    Err(_) => {
+                        //let message = FileJob::send_bad_request_error(stream);
+                        //ThreadPool::send_to_logger(logger_tx, message, thread_name);
                     }
                 };
             }
@@ -278,7 +282,7 @@ impl ThreadPool {
             }
         };
     }
-
+    #[allow(dead_code)]
     fn send_to_logger(logger_tx: &mut Sender<String>, message: String, thread_name: &str) {
         match logger_tx.send(message) {
             Ok(_) => {}
@@ -334,11 +338,6 @@ impl ThreadPool {
             }
         }
     }
-
-    // pub fn print_heap(&self) {
-    //     let heap = self.heap.clone();
-    //     println!("{:?}", heap);
-    // }
 
     pub fn execute(&self, stream: TcpStream) {
         match self.tx.send(stream) {
