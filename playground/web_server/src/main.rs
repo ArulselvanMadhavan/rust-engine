@@ -137,7 +137,6 @@ fn main() {
                 // use move closure to give ownership of the stream to the
                 // child thread
                 pool.execute(move|| {
-                    println!("connection succeeded");
                     handle_client(stream, tx_clone)
                 });
 

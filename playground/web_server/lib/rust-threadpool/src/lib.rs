@@ -183,7 +183,7 @@ fn spawn_in_pool(jobs: Arc<Mutex<Receiver<Thunk<'static>>>>,
                         *thread_counter.lock().unwrap() += 1;
                         job.call_box();
                         sentinel.request_counter += 1;
-                        println!("request count for thread {}: {}", id, sentinel.request_counter);
+                        //println!("request count for thread {}: {}", id, sentinel.request_counter);
                         *thread_counter.lock().unwrap() -= 1;
                     },
 
