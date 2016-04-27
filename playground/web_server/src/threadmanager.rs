@@ -241,7 +241,7 @@ impl ThreadPool {
             }
         });
         match result {
-            Ok(_) => println!("Special thread started"),
+            Ok(_) => println!("Scheduler thread started"),
             Err(e) => println!("Error:{}", e.description()),
         }
     }
