@@ -35,4 +35,5 @@ contains the files of various sizes used for benchmarking. The Cargo.toml
 file contains configurations for the cargo package manager, including
 dependencies of the project. The /target directory is the output directory
 as usual.
-### Team Members: Jimmy Ly and Arulselvan Madhavan
+### Team Members
+Jimmy Ly and Arulselvan Madhavan
