@@ -25,14 +25,15 @@
    multirust default nightly
    ```
 3. To build the Rust web server, run:
-   ```rust
+
+   ```
    cargo build
    ```
 4. To run the Rust web server, run:
    cargo run [# of scheduler threads] [# of worker threads] [# of logger threads] [# cache threads]
 
    For example, to run with 2 scheduler threads, 5 worker threads, 1 logger thread, and 1 cache thread, you would run:
-   ```rust
+   ```
    cargo run 2 5 1 1
    ```
 5. The server will be listening on localhost port 8080, so for example you can
