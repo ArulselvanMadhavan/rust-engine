@@ -8,6 +8,7 @@
 ## Build & Installation:
 1. Go to https://github.com/brson/multirust to install multirust.
    Ideally, the following command should work:
+
    ```
    curl -sf https://raw.githubusercontent.com/brson/multirust/master/blastoff.sh | sh
    ```
@@ -15,9 +16,11 @@
    once. In order to use the concurrent hash map library, we needed to use a nightly
    build of Rust.
 2. Once multirust is installed, type the following commands in the terminal:
+
    ```
    multirust update nightly
    ```
+   
    ```
    multirust default nightly
    ```
