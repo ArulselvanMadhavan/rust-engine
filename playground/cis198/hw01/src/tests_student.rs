@@ -2,13 +2,14 @@
 
 use problem1::{sum, dedup, filter};
 use problem2::mat_mult;
+use problem3::sieve;
 
 #[test]
 fn test_sum_large() {
-    let array = [4294967294,1];
+    let array = [429496729,1];
     let result = sum(&array);
     println!("{}", result);
-    assert_eq!(result, 4294967295);
+    assert_eq!(result, 429496730);
 }
 
 #[test]
@@ -58,4 +59,19 @@ fn test_matrix_multiply_large() {
             assert_eq!(act_result[row][col], exp_result[row][col]);
         }
     }
+}
+
+#[test]
+fn test_sieve_large() {
+    assert_eq!(sieve(121), vec![2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109,113]);
+}
+
+#[test]
+fn test_sieve_single() {
+    assert_eq!(sieve(2), vec![2]);
+}
+
+#[test]
+fn test_sieve_three() {
+    assert_eq!(sieve(3), vec![2]);
 }
