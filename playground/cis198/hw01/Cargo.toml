@@ -1,0 +1,6 @@
+[package]
+name = "hw01"
+version = "0.1.0"
+authors = ["Arulselvan Madhavan <arulselv@ccs.neu.edu>"]
+
+[dependencies]
