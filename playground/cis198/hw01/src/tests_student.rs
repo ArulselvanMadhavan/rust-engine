@@ -3,6 +3,7 @@
 use problem1::{sum, dedup, filter};
 use problem2::mat_mult;
 use problem3::sieve;
+use problem4::{hanoi, Peg};
 
 #[test]
 fn test_sum_large() {
@@ -74,4 +75,16 @@ fn test_sieve_single() {
 #[test]
 fn test_sieve_three() {
     assert_eq!(sieve(3), vec![2]);
+}
+
+#[test]
+fn test_hanoi_3_disks() {
+    let result = hanoi(3,Peg::A, Peg::B, Peg::C);
+    assert_eq!(result.len(), 7);
+}
+
+#[test]
+fn test_hanoi_5_disks() {
+    let result = hanoi(5, Peg::A, Peg::B, Peg::C);
+    assert_eq!(result.len(), 31);
 }
