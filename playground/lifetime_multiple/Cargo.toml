@@ -1,0 +1,10 @@
+[package]
+name = "lifetime_multiple"
+version = "0.1.0"
+authors = ["Arulselvan Madhavan <arulselv@ccs.neu.edu>"]
+
+[dependencies]
+clippy = { version = "*", optional = true }
+
+[features]
+default = []
